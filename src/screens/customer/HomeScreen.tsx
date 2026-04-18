@@ -1,304 +1,785 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, NativeScrollEvent, NativeSyntheticEvent,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { SectionHeader } from '../../components/ui';
-import { Colors, FontSize, FontWeight, BorderRadius, Shadows } from '../../constants/theme';
+import { BlurView } from 'expo-blur';
 import { SERVICES } from '../../data/mockData';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const BANNER_WIDTH = SCREEN_WIDTH - 36; // 18px margin on each side
+
+const CATEGORIES = ['All', 'Plumber', 'Electrician', 'Cleaning'];
+
+const PROMOTIONAL_BANNERS = [
+  {
+    id: 1,
+    colors: ['#FF5500', '#FF9A3C'],
+    tag: 'WEEKEND OFFER',
+    title: '50% Cashback',
+    subtitle: 'On all services booked this weekend',
+  },
+  {
+    id: 2,
+    colors: ['#EC4899', '#F472B6'],
+    tag: 'NEW USER',
+    title: 'First Booking Free',
+    subtitle: 'Get your first service absolutely free',
+  },
+  {
+    id: 3,
+    colors: ['#8B5CF6', '#A78BFA'],
+    tag: 'SPECIAL DEAL',
+    title: 'Refer & Earn ₹500',
+    subtitle: 'Invite friends and get rewards',
+  },
+];
+
+const HOW_IT_WORKS_STEPS = [
+  {
+    num: '1',
+    title: 'Create your account',
+    desc: 'Sign up in 30 seconds — name, phone & location.',
+    icon: 'person-add-outline',
+    color: '#FF6B00',
+    bgColor: '#FFF0E6',
+  },
+  {
+    num: '2',
+    title: 'Find the right service',
+    desc: 'Browse verified pros, filter by rating & slot.',
+    icon: 'search-outline',
+    color: '#9333EA',
+    bgColor: '#F3E8FF',
+  },
+  {
+    num: '3',
+    title: 'Send your enquiry',
+    desc: 'Describe issue, pick a time, get confirmed fast.',
+    icon: 'paper-plane-outline',
+    color: '#0284C7',
+    bgColor: '#E0F2FE',
+  },
+  {
+    num: '4',
+    title: 'Job done!',
+    desc: 'Rate your pro & track bookings in one place.',
+    icon: 'checkmark-circle-outline',
+    color: '#16A34A',
+    bgColor: '#DCFCE7',
+    isDone: true,
+  },
+];
+
 const WHY_CHOOSE = [
-  { icon: 'shield-checkmark-outline', title: 'Verified Pros', desc: 'Background-checked professionals' },
-  { icon: 'star-outline', title: 'Top Rated', desc: 'Rated by real customers' },
-  { icon: 'chatbubble-ellipses-outline', title: 'Responsive', desc: 'Quick reply guarantee' },
-  { icon: 'flash-outline', title: 'Fast', desc: 'Same-day availability' },
+  { icon: 'shield-checkmark-outline', title: 'Verified Pros', desc: 'Background-checked professionals', color: '#7C3AED', bg: '#EDE9FE' },
+  { icon: 'star-outline', title: 'Top Rated', desc: 'Rated by real customers', color: '#CA8A04', bg: '#FEF9C3' },
+  { icon: 'chatbubble-ellipses-outline', title: 'Responsive', desc: 'Quick reply guarantee', color: '#16A34A', bg: '#DCFCE7' },
+  { icon: 'flash-outline', title: 'Fast', desc: 'Same-day availability', color: '#E11D48', bg: '#FFE4E6' },
 ];
 
-const HOW_IT_WORKS = [
-  { step: '1', label: 'Sign Up', icon: 'person-add-outline', desc: 'Create your free account', color: '#3B82F6' },
-  { step: '2', label: 'Search', icon: 'search-outline', desc: 'Find the right service', color: '#8B5CF6' },
-  { step: '3', label: 'Enquire', icon: 'paper-plane-outline', desc: 'Send your request', color: '#EC4899' },
-  { step: '4', label: 'Rate', icon: 'star-outline', desc: 'Share your experience', color: '#F59E0B' },
+const SERVICE_COLORS = [
+  { bg: '#EDE9FE', icon: '#7C3AED' },
+  { bg: '#FEF9C3', icon: '#CA8A04' },
+  { bg: '#DCFCE7', icon: '#16A34A' },
+  { bg: '#FFE4E6', icon: '#E11D48' },
+  { bg: '#E0F2FE', icon: '#0284C7' },
+  { bg: '#FEF3C7', icon: '#D97706' },
+  { bg: '#F3E8FF', icon: '#9333EA' },
+  { bg: '#F0FDF4', icon: '#15803D' },
 ];
 
-const SERVICE_TAGS = ['Plumber', 'Electrician', 'Cleaning', 'AC Repair', 'Painting', 'Carpenter'];
+const SERVICE_ICON_MAP: Record<string, string> = {
+  Plumbing: 'water-outline',
+  Electrical: 'flash-outline',
+  Cleaning: 'sparkles-outline',
+  Carpentry: 'hammer-outline',
+  Painting: 'color-palette-outline',
+  'AC Repair': 'thermometer-outline',
+  'Refrigerator Repair': 'snow-outline',
+  'Washing Machine': 'refresh-outline',
+  'TV Repair': 'tv-outline',
+};
 
 export const HomeScreen = ({ navigation }: any) => {
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const bannerScrollRef = useRef<ScrollView>(null);
+
+  // Auto-scroll banners every 3 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBannerIndex((prevIndex) => {
+        const nextIndex = (prevIndex + 1) % PROMOTIONAL_BANNERS.length;
+        bannerScrollRef.current?.scrollTo({
+          x: nextIndex * SCREEN_WIDTH,
+          animated: true,
+        });
+        return nextIndex;
+      });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Handle manual scroll
+  const handleBannerScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const scrollPosition = event.nativeEvent.contentOffset.x;
+    const index = Math.round(scrollPosition / SCREEN_WIDTH);
+    setCurrentBannerIndex(index);
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
 
-      {/* Top bar */}
-      <View style={styles.topBar}>
-        <View>
-          <Text style={styles.greeting}>Good morning, Darshan 👋</Text>
-          <TouchableOpacity style={styles.locationRow}>
-            <Ionicons name="location-outline" size={14} color={Colors.slate500} />
-            <Text style={styles.city}>Palanpur, Gujarat</Text>
-            <Text style={styles.changeCity}>Change</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.topBarRight}>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => navigation.navigate('Notifications')}>
-            <Ionicons name="notifications-outline" size={22} color={Colors.darkNavy} />
-            <View style={styles.notifDot} />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.avatar}
-            onPress={() => navigation.navigate('Profile')}>
-            <Text style={styles.avatarText}>DP</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-
-        {/* Search bar */}
-        <TouchableOpacity
-          style={styles.searchBar}
-          onPress={() => navigation.navigate('Search')}
-          activeOpacity={0.8}>
-          <Ionicons name="search-outline" size={18} color={Colors.slate400} />
-          <Text style={styles.searchPlaceholder}>Search services or providers...</Text>
-          <View style={styles.filterBtn}>
-            <Ionicons name="options-outline" size={16} color={Colors.primary} />
+      {/* Sticky Header with Blur */}
+      <BlurView intensity={80} tint="light" style={styles.header}>
+        {/* Top Row */}
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.greeting}>Good morning, Darshan 👋</Text>
+            <View style={styles.locationRow}>
+              <Ionicons name="location" size={12} color="#FF6B00" />
+              <Text style={styles.locationText}>Palanpur, Gujarat · </Text>
+              <TouchableOpacity>
+                <Text style={styles.changeText}>Change</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </TouchableOpacity>
-
-        {/* Popular tags */}
-        <ScrollView
-          horizontal showsHorizontalScrollIndicator={false}
-          style={styles.tagsScroll}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingRight: 20 }}>
-          {SERVICE_TAGS.map(tag => (
+          <View style={styles.headerIcons}>
             <TouchableOpacity
-              key={tag}
-              style={styles.tag}
-              onPress={() => navigation.navigate('Providers', { service: tag })}>
-              <Text style={styles.tagText}>{tag}</Text>
+              style={styles.notifBtn}
+              onPress={() => navigation.navigate('Notifications')}>
+              <Ionicons name="notifications-outline" size={18} color="#0D0D0D" />
+              <View style={styles.notifDot} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.avatar}
+              onPress={() => navigation.navigate('Profile')}>
+              <Text style={styles.avatarText}>DP</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Search Row */}
+        <View style={styles.searchRow}>
+          <TouchableOpacity
+            style={styles.searchBar}
+            onPress={() => navigation.navigate('Search')}
+            activeOpacity={0.8}>
+            <Ionicons name="search-outline" size={15} color="#bbb" />
+            <Text style={styles.searchPlaceholder}>Search services or providers...</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.filterBtn}>
+            <Ionicons name="options-outline" size={16} color="#fff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Category Chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsContainer}>
+          {CATEGORIES.map((cat) => (
+            <TouchableOpacity
+              key={cat}
+              style={[styles.chip, selectedCategory === cat && styles.chipActive]}
+              onPress={() => setSelectedCategory(cat)}>
+              <Text style={[styles.chipText, selectedCategory === cat && styles.chipTextActive]}>
+                {cat}
+              </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
+      </BlurView>
 
-        <View style={styles.content}>
+      {/* Scrollable Content */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}>
 
-          {/* Our Services */}
-          <SectionHeader title="Our Services" onViewAll={() => navigation.navigate('AllServices')} />
-          <View style={styles.serviceGrid}>
-            {SERVICES.slice(0, 6).map(service => (
-              <TouchableOpacity
-                key={service.id}
-                style={styles.serviceCard}
-                onPress={() => navigation.navigate('Providers', { service: service.name })}
-                activeOpacity={0.85}>
-                <View style={styles.serviceIconBg}>
-                  <Ionicons name={serviceIcon(service.name)} size={26} color={Colors.primary} />
-                </View>
-                <Text style={styles.serviceName}>{service.name}</Text>
-                <Text style={styles.serviceTagline}>{service.tagline}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* How It Works */}
-          <SectionHeader title="How It Works" />
-          <View style={styles.howItWorksContainer}>
-            {HOW_IT_WORKS.map((step, index) => (
-              <React.Fragment key={step.step}>
-                <TouchableOpacity style={styles.howCard} activeOpacity={0.85}>
-                  <LinearGradient
-                    colors={[step.color, step.color + 'DD']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.howStepBadge}>
-                    <Text style={styles.howStepNum}>{step.step}</Text>
-                  </LinearGradient>
-                  <View style={[styles.howIconBg, { backgroundColor: step.color + '15' }]}>
-                    <Ionicons name={step.icon as any} size={28} color={step.color} />
+        {/* Promotional Banner Slider */}
+        <View style={styles.bannerContainer}>
+          <ScrollView
+            ref={bannerScrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleBannerScroll}
+            scrollEventThrottle={16}
+            decelerationRate="fast"
+            snapToInterval={SCREEN_WIDTH}
+            snapToAlignment="start">
+            {PROMOTIONAL_BANNERS.map((banner) => (
+              <View key={banner.id} style={styles.bannerSlide}>
+                <LinearGradient
+                  colors={banner.colors as [string, string, ...string[]]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.banner}>
+                  <View style={styles.bannerCircle1} />
+                  <View style={styles.bannerCircle2} />
+                  <View style={styles.bannerTag}>
+                    <Text style={styles.bannerTagText}>{banner.tag}</Text>
                   </View>
-                  <Text style={styles.howLabel}>{step.label}</Text>
-                  <Text style={styles.howDesc}>{step.desc}</Text>
-                </TouchableOpacity>
-                {index < HOW_IT_WORKS.length - 1 && (
-                  <View style={styles.howConnector}>
-                    <Ionicons name="chevron-forward" size={16} color={Colors.slate300} />
-                  </View>
-                )}
-              </React.Fragment>
-            ))}
-          </View>
-
-          {/* Why Choose Us */}
-          <View style={{ marginTop: 24 }}>
-            <SectionHeader title="Why Choose Us" />
-            <View style={styles.whyGrid}>
-              {WHY_CHOOSE.map(item => (
-                <View key={item.title} style={styles.whyCard}>
-                  <View style={styles.whyIconBg}>
-                    <Ionicons name={item.icon as any} size={22} color={Colors.primary} />
-                  </View>
-                  <Text style={styles.whyTitle}>{item.title}</Text>
-                  <Text style={styles.whyDesc}>{item.desc}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          {/* Provider banner */}
-          <LinearGradient
-            colors={['#1D4ED8', '#0F172A']}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-            style={styles.providerBanner}>
-            <View style={styles.bannerLeft}>
-              <Ionicons name="construct-outline" size={28} color="rgba(255,255,255,0.8)" />
-              <View>
-                <Text style={styles.bannerTitle}>Are You a Professional?</Text>
-                <Text style={styles.bannerSub}>Grow your business with ServiceHub</Text>
+                  <Text style={styles.bannerTitle}>{banner.title}</Text>
+                  <Text style={styles.bannerSub}>{banner.subtitle}</Text>
+                  <TouchableOpacity style={styles.bannerCta}>
+                    <Text style={styles.bannerCtaText}>Book now</Text>
+                    <Ionicons name="arrow-forward" size={12} color="#FF6B00" />
+                  </TouchableOpacity>
+                </LinearGradient>
               </View>
-            </View>
-            <TouchableOpacity
-              style={styles.bannerBtn}
-              onPress={() => navigation.navigate('BecomeProvider')}>
-              <Text style={styles.bannerBtnText}>Join Now</Text>
-              <Ionicons name="arrow-forward" size={15} color={Colors.primary} />
-            </TouchableOpacity>
-          </LinearGradient>
+            ))}
+          </ScrollView>
 
+          {/* Pagination Dots */}
+          <View style={styles.dotsContainer}>
+            {PROMOTIONAL_BANNERS.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.dot,
+                  currentBannerIndex === index && styles.dotActive,
+                ]}
+              />
+            ))}
+          </View>
         </View>
+
+        {/* Services Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Services</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('AllServices')}>
+              <Text style={styles.viewAll}>View all →</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.serviceGrid}>
+            {SERVICES.slice(0, 8).map((service, index) => {
+              const colorSet = SERVICE_COLORS[index % SERVICE_COLORS.length];
+              return (
+                <TouchableOpacity
+                  key={service.id}
+                  style={styles.serviceItem}
+                  onPress={() => navigation.navigate('Providers', { service: service.name })}
+                  activeOpacity={0.7}>
+                  <View style={[styles.serviceBox, { backgroundColor: colorSet.bg }]}>
+                    <Ionicons
+                      name={(SERVICE_ICON_MAP[service.name] || 'construct-outline') as any}
+                      size={24}
+                      color={colorSet.icon}
+                    />
+                  </View>
+                  <Text style={styles.serviceLabel}>{service.name}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* How It Works Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>How it works</Text>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>3 easy steps</Text>
+            </View>
+          </View>
+          <View style={styles.hiwWrap}>
+            {HOW_IT_WORKS_STEPS.map((step, index) => (
+              <View key={step.num} style={styles.hiwStep}>
+                <View style={styles.hiwLeft}>
+                  <View style={[styles.hiwNum, { backgroundColor: step.color }]}>
+                    <Text style={styles.hiwNumText}>{step.num}</Text>
+                  </View>
+                  {index < HOW_IT_WORKS_STEPS.length - 1 && (
+                    <LinearGradient
+                      colors={[step.color, HOW_IT_WORKS_STEPS[index + 1].color]}
+                      style={styles.hiwLine}
+                    />
+                  )}
+                </View>
+                <View style={[
+                  styles.hiwCard,
+                  step.isDone && { backgroundColor: '#F0FDF4', borderColor: '#DCFCE7' }
+                ]}>
+                  <View style={[styles.hiwIconWrap, { backgroundColor: step.bgColor }]}>
+                    <Ionicons name={step.icon as any} size={20} color={step.color} />
+                  </View>
+                  <Text style={[styles.hiwCardTitle, step.isDone && { color: '#15803D' }]}>
+                    {step.title}
+                  </Text>
+                  <Text style={[styles.hiwCardSub, step.isDone && { color: '#1ca14dff' }]}>
+                    {step.desc}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Why Choose Us Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Why choose us</Text>
+          </View>
+          <View style={styles.whyGrid}>
+            {WHY_CHOOSE.map((item) => (
+              <View key={item.title} style={styles.whyCard}>
+                <View style={[styles.whyIcon, { backgroundColor: item.bg }]}>
+                  <Ionicons name={item.icon as any} size={20} color={item.color} />
+                </View>
+                <Text style={styles.whyTitle}>{item.title}</Text>
+                <Text style={styles.whySub}>{item.desc}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Provider Banner */}
+        <View style={styles.proBanner}>
+          <View style={styles.proIcon}>
+            <Ionicons name="lock-closed-outline" size={20} color="#fff" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.proTitle}>Are you a professional?</Text>
+            <Text style={styles.proSub}>Grow your business with Sevek</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.proBtn}
+            onPress={() => navigation.navigate('BecomeProvider')}>
+            <Text style={styles.proBtnText}>Join now →</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ height: 20 }} />
       </ScrollView>
     </View>
   );
 };
 
-// Map service name to an Ionicons icon name
-function serviceIcon(name: string): any {
-  const map: Record<string, string> = {
-    Plumbing: 'water-outline',
-    Electrical: 'flash-outline',
-    Cleaning: 'sparkles-outline',
-    Carpentry: 'hammer-outline',
-    Painting: 'color-palette-outline',
-    'AC Repair': 'thermometer-outline',
-    'Refrigerator Repair': 'snow-outline',
-    'Washing Machine': 'refresh-outline',
-    'TV Repair': 'tv-outline',
-    'CCTV Installation': 'videocam-outline',
-    'Inverter Repair': 'battery-charging-outline',
-    'RO/Water Purifier': 'water-outline',
-    'Geyser Repair': 'flame-outline',
-    'Bathroom Cleaning': 'water-outline',
-    'Kitchen Cleaning': 'restaurant-outline',
-    'Sofa Cleaning': 'bed-outline',
-    'Pest Control': 'bug-outline',
-    'Laptop Repair': 'laptop-outline',
-    'Mobile Repair': 'phone-portrait-outline',
-    Locksmith: 'key-outline',
-  };
-  return (map[name] || 'construct-outline') as any;
-}
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  topBar: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingTop: 52, paddingBottom: 12,
-    backgroundColor: Colors.white, borderBottomWidth: 1, borderBottomColor: Colors.border,
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F4F0',
   },
-  greeting: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.darkNavy },
-  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
-  city: { fontSize: FontSize.sm, color: Colors.slate500 },
-  changeCity: { fontSize: FontSize.sm, color: Colors.primary, fontWeight: FontWeight.semibold, marginLeft: 4 },
-  topBarRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  iconBtn: { position: 'relative', width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 12,
+    overflow: 'hidden',
+    backgroundColor: '#F5F4F0',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  greeting: {
+    fontFamily: 'System',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0D0D0D',
+    letterSpacing: -0.4,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 3,
+  },
+  locationText: {
+    fontSize: 12,
+    color: '#888',
+  },
+  changeText: {
+    fontSize: 12,
+    color: '#FF6B00',
+    fontWeight: '500',
+  },
+  headerIcons: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+  },
+  notifBtn: {
+    width: 36,
+    height: 36,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+    position: 'relative',
+  },
   notifDot: {
-    position: 'absolute', top: 8, right: 8, width: 8, height: 8,
-    borderRadius: 4, backgroundColor: Colors.errorRed, borderWidth: 1.5, borderColor: Colors.white,
+    position: 'absolute',
+    top: 6,
+    right: 7,
+    width: 7,
+    height: 7,
+    backgroundColor: '#FF6B00',
+    borderRadius: 50,
+    borderWidth: 1.5,
+    borderColor: '#F5F4F0',
   },
   avatar: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.blue50,
-    borderWidth: 2, borderColor: Colors.blue200, alignItems: 'center', justifyContent: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 50,
+    backgroundColor: '#FF6B00',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  avatarText: { fontSize: 13, fontWeight: FontWeight.bold, color: Colors.primary },
-  scroll: { paddingBottom: 100 },
+  avatarText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  searchRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+  },
   searchBar: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    height: 50, backgroundColor: Colors.white,
-    marginHorizontal: 20, marginVertical: 14,
-    borderRadius: BorderRadius.full, paddingHorizontal: 16,
-    borderWidth: 1.5, borderColor: Colors.border, ...Shadows.card,
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  searchPlaceholder: { flex: 1, fontSize: FontSize.base, color: Colors.slate400 },
+  searchPlaceholder: {
+    fontSize: 13,
+    color: '#bbb',
+  },
   filterBtn: {
-    width: 32, height: 32, borderRadius: 10,
-    backgroundColor: Colors.blue50, alignItems: 'center', justifyContent: 'center',
+    width: 44,
+    height: 44,
+    backgroundColor: '#0D0D0D',
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  tagsScroll: { marginBottom: 16 },
-  tag: {
-    paddingHorizontal: 14, paddingVertical: 7, backgroundColor: Colors.white,
-    borderRadius: BorderRadius.full, borderWidth: 1.5, borderColor: Colors.border,
+  chipsContainer: {
+    flexDirection: 'row',
+    gap: 7,
+    marginTop: 10,
   },
-  tagText: { fontSize: FontSize.sm, color: Colors.lightNavy, fontWeight: FontWeight.medium },
-  content: { paddingHorizontal: 20 },
-  serviceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 28 },
-  serviceCard: {
-    width: '47%', backgroundColor: Colors.white, borderRadius: 16,
-    padding: 16, ...Shadows.card,
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+    backgroundColor: '#FFFFFF',
   },
-  serviceIconBg: {
-    width: 48, height: 48, borderRadius: 12, backgroundColor: Colors.blue50,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 10,
+  chipActive: {
+    backgroundColor: '#0D0D0D',
+    borderColor: '#0D0D0D',
   },
-  serviceName: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.darkNavy },
-  serviceTagline: { fontSize: FontSize.xs, color: Colors.slate500, marginTop: 3, lineHeight: 16 },
-  howItWorksContainer: {
-    flexDirection: 'row', alignItems: 'center', marginBottom: 28,
-    paddingHorizontal: 4,
+  chipText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#666',
   },
-  howCard: {
-    flex: 1, backgroundColor: Colors.white, borderRadius: 16, padding: 14,
-    alignItems: 'center', gap: 8, ...Shadows.card, minHeight: 160,
+  chipTextActive: {
+    color: '#fff',
   },
-  howConnector: {
-    width: 20, alignItems: 'center', justifyContent: 'center',
-    marginHorizontal: -4,
+  scrollContent: {
+    paddingBottom: 100,
   },
-  howStepBadge: {
-    width: 32, height: 32, borderRadius: 16,
-    alignItems: 'center', justifyContent: 'center',
-    ...Shadows.card,
+  bannerContainer: {
+    marginTop: 14,
+    position: 'relative',
   },
-  howStepNum: { fontSize: FontSize.base, fontWeight: FontWeight.extrabold, color: Colors.white },
-  howIconBg: {
-    width: 52, height: 52, borderRadius: 14,
-    alignItems: 'center', justifyContent: 'center',
+  bannerSlide: {
+    width: SCREEN_WIDTH,
+    paddingHorizontal: 18,
   },
-  howLabel: { fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.darkNavy, textAlign: 'center' },
-  howDesc: { fontSize: 10, color: Colors.slate500, textAlign: 'center', lineHeight: 14 },
-  whyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
+  banner: {
+    borderRadius: 24,
+    padding: 20,
+    paddingHorizontal: 18,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  bannerCircle1: {
+    position: 'absolute',
+    right: -22,
+    top: -22,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  bannerCircle2: {
+    position: 'absolute',
+    right: 44,
+    bottom: -38,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+  },
+  bannerTag: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+    marginBottom: 8,
+  },
+  bannerTagText: {
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.8,
+    color: '#fff',
+  },
+  bannerTitle: {
+    fontSize: 30,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: -0.5,
+    lineHeight: 32,
+  },
+  bannerSub: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.82)',
+    marginTop: 5,
+  },
+  bannerCta: {
+    marginTop: 14,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  bannerCtaText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FF6B00',
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#D1D1D1',
+  },
+  dotActive: {
+    width: 20,
+    backgroundColor: '#FF6B00',
+  },
+  section: {
+    paddingHorizontal: 18,
+    paddingTop: 22,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#0D0D0D',
+    letterSpacing: -0.3,
+  },
+  viewAll: {
+    fontSize: 12,
+    color: '#FF6B00',
+    fontWeight: '500',
+  },
+  badge: {
+    backgroundColor: '#FFF0E6',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FF6B00',
+  },
+  serviceGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  serviceItem: {
+    width: '22%',
+    alignItems: 'center',
+    gap: 6,
+  },
+  serviceBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  serviceLabel: {
+    fontSize: 10,
+    color: '#555',
+    textAlign: 'center',
+    lineHeight: 13,
+    fontWeight: '500',
+  },
+  hiwWrap: {
+    flexDirection: 'column',
+    gap: 0,
+  },
+  hiwStep: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 14,
+    paddingBottom: 20,
+  },
+  hiwLeft: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: 32,
+  },
+  hiwNum: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hiwNumText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  hiwLine: {
+    width: 2,
+    flex: 1,
+    minHeight: 30,
+    marginTop: 4,
+    borderRadius: 2,
+  },
+  hiwCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 13,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+  },
+  hiwIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-end',
+    marginBottom: -30,
+    marginTop: -5,
+  },
+  hiwCardTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0D0D0D',
+    marginBottom: 4,
+  },
+  hiwCardSub: {
+    fontSize: 11,
+    color: '#888',
+    lineHeight: 16,
+  },
+  whyGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
   whyCard: {
-    width: '47%', backgroundColor: Colors.white, borderRadius: 16, padding: 16, ...Shadows.card,
+    width: '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
   },
-  whyIconBg: {
-    width: 42, height: 42, borderRadius: 12, backgroundColor: Colors.blue50,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 10,
+  whyIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
-  whyTitle: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.darkNavy },
-  whyDesc: { fontSize: FontSize.xs, color: Colors.slate500, marginTop: 3, lineHeight: 16 },
-  providerBanner: {
-    borderRadius: 18, padding: 20, marginBottom: 24,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+  whyTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0D0D0D',
   },
-  bannerLeft: { flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 },
-  bannerTitle: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.white },
-  bannerSub: { fontSize: FontSize.xs, color: 'rgba(255,255,255,0.6)', marginTop: 3 },
-  bannerBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 14, paddingVertical: 9,
-    backgroundColor: Colors.white, borderRadius: BorderRadius.md,
+  whySub: {
+    fontSize: 10,
+    color: '#999',
+    marginTop: 3,
+    lineHeight: 14,
   },
-  bannerBtnText: { fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.primary },
+  proBanner: {
+    marginHorizontal: 18,
+    marginTop: 22,
+    backgroundColor: '#0D0D0D',
+    borderRadius: 22,
+    padding: 18,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  proIcon: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#FF6B00',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  proTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  proSub: {
+    fontSize: 10,
+    color: '#666',
+    marginTop: 2,
+  },
+  proBtn: {
+    backgroundColor: '#FF6B00',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  proBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#fff',
+  },
 });

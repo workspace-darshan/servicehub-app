@@ -101,7 +101,7 @@ export const NOTIFICATIONS = [
     id: '4',
     type: 'system',
     title: 'Your profile was viewed 12 times',
-    body: 'Your ServiceHub profile got 12 views this week. Keep it updated!',
+    body: 'Your Sevek profile got 12 views this week. Keep it updated!',
     time: '2 days ago',
     read: true,
   },
@@ -118,7 +118,8 @@ export const HOW_IT_WORKS_CUSTOMER = [
 export const HOW_IT_WORKS_PROVIDER = [
   { step: 'Step 1', title: 'Register as Provider', desc: 'Fill your business profile in 4 easy steps.' },
   { step: 'Step 2', title: 'Set Up Profile', desc: 'Add services, locations, and business details.' },
-  { step: 'Step 3', title: 'Get Discovered', desc: 'Your profile goes live immediately on ServiceHub.' },
+  { step: 'Step 3', title: 'Get Discovered', desc: 'Your profile goes live immediately on Sevek.' },
   { step: 'Step 4', title: 'Receive Enquiry', desc: 'Customers send you direct service requests.' },
   { step: 'Step 5', title: 'Respond & Serve', desc: 'Reply to enquiries, complete the job, earn reviews.' },
+  { step: 'Step 6', title: 'Get Paid', desc: 'Receive payments directly and build your reputation.' },
 ];

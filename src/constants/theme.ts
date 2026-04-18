@@ -1,4 +1,4 @@
-// ServiceHub Design System — Color Tokens
+// Sevek Design System — Color Tokens
 export const Colors = {
   // Primary
   primary: '#1D4ED8',

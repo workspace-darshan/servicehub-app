@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
-    height: 52, borderWidth: 1.5, borderColor: Colors.border, borderRadius: BorderRadius.md,
+    height: 48, borderWidth: 1.5, borderColor: Colors.border, borderRadius: BorderRadius.md,
     backgroundColor: Colors.white, paddingHorizontal: 14,
   },
   bareInput: { flex: 1, fontSize: FontSize.base, color: Colors.darkNavy },
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   },
   addChipText: { fontSize: FontSize.sm, color: Colors.primary, fontWeight: FontWeight.semibold },
   saveBtn: {
-    height: 54, backgroundColor: Colors.primary, borderRadius: BorderRadius.md,
+    height: 48, backgroundColor: Colors.primary, borderRadius: BorderRadius.md,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
   },
   saveBtnText: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.white },

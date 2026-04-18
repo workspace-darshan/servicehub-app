@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, FontSize, FontWeight, BorderRadius, Shadows } from '../../constants/theme';
+import { TopBar } from '../../components/TopBar';
 import { HOW_IT_WORKS_CUSTOMER, HOW_IT_WORKS_PROVIDER } from '../../data/mockData';
 
 const FAQS = [
@@ -37,19 +38,25 @@ export const HowItWorksScreen = ({ navigation }: any) => {
   const [tab, setTab] = useState<TabKey>('customer');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const steps = tab === 'customer' ? HOW_IT_WORKS_CUSTOMER : HOW_IT_WORKS_PROVIDER;
+  const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { height }]}>
       <StatusBar style="dark" />
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={Colors.darkNavy} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>How It Works</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <TopBar
+        title="How It Works"
+        onBack={() => navigation.goBack()}
+      />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 40 }]}
+        keyboardShouldPersistTaps="handled"
+        bounces={true}
+        nestedScrollEnabled={true}
+      >
         {/* Tab switcher */}
         <View style={styles.switcher}>
           {(['customer', 'provider'] as TabKey[]).map(t => (
@@ -59,8 +66,8 @@ export const HowItWorksScreen = ({ navigation }: any) => {
               onPress={() => setTab(t)}>
               <Ionicons
                 name={t === 'customer' ? 'person-outline' : 'construct-outline'}
-                size={15}
-                color={tab === t ? Colors.primary : Colors.slate500}
+                size={14}
+                color={tab === t ? '#FF6B00' : '#888'}
               />
               <Text style={[styles.switchTabText, tab === t && styles.switchTabTextActive]}>
                 {t === 'customer' ? 'For Customers' : 'For Providers'}
@@ -77,11 +84,11 @@ export const HowItWorksScreen = ({ navigation }: any) => {
               <View key={step.step} style={styles.stepRow}>
                 <View style={styles.stepLeft}>
                   <View style={styles.stepCircle}>
-                    <Ionicons name={iconName} size={16} color={Colors.primary} />
+                    <Ionicons name={iconName} size={15} color="#FF6B00" />
                   </View>
                   {index < steps.length - 1 && <View style={styles.stepLine} />}
                 </View>
-                <View style={styles.stepContent}>
+                <View style={styles.stepCard}>
                   <View style={styles.stepNumBadge}>
                     <Text style={styles.stepNum}>{step.step}</Text>
                   </View>
@@ -105,8 +112,8 @@ export const HowItWorksScreen = ({ navigation }: any) => {
               <Text style={styles.faqQ}>{faq.q}</Text>
               <Ionicons
                 name={openFaq === i ? 'chevron-up' : 'chevron-down'}
-                size={16}
-                color={Colors.slate400}
+                size={15}
+                color="#888"
               />
             </View>
             {openFaq === i && <Text style={styles.faqA}>{faq.a}</Text>}
@@ -131,60 +138,66 @@ export const HowItWorksScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingTop: 52, paddingBottom: 14,
-    backgroundColor: Colors.white, borderBottomWidth: 1, borderBottomColor: Colors.border,
+  container: { backgroundColor: '#F5F4F0', overflow: 'hidden' },
+  scrollView: { flex: 1 },
+  scroll: {
+    padding: 18,
   },
-  backBtn: { width: 40, height: 40, justifyContent: 'center' },
-  headerTitle: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.darkNavy },
-  scroll: { padding: 20, paddingBottom: 60 },
   switcher: {
-    flexDirection: 'row', backgroundColor: Colors.surfaceContainerLow,
-    borderRadius: 14, padding: 4, marginBottom: 28,
+    flexDirection: 'row', backgroundColor: '#FFFFFF',
+    borderRadius: 14, padding: 4, marginBottom: 22,
+    borderWidth: 1, borderColor: '#ECECEC',
   },
   switchTab: {
-    flex: 1, height: 42, flexDirection: 'row', alignItems: 'center',
+    flex: 1, height: 38, flexDirection: 'row', alignItems: 'center',
     justifyContent: 'center', gap: 6, borderRadius: 10,
   },
-  switchTabActive: { backgroundColor: Colors.white, ...Shadows.card },
-  switchTabText: { fontSize: FontSize.sm, color: Colors.slate500, fontWeight: FontWeight.medium },
-  switchTabTextActive: { color: Colors.primary, fontWeight: FontWeight.bold },
-  stepRow: { flexDirection: 'row', gap: 16 },
-  stepLeft: { alignItems: 'center', width: 44 },
+  switchTabActive: { backgroundColor: '#FFF4ED' },
+  switchTabText: { fontSize: 12, color: '#888', fontWeight: '500' },
+  switchTabTextActive: { color: '#FF6B00', fontWeight: '700' },
+  stepRow: { flexDirection: 'row', gap: 14 },
+  stepLeft: { alignItems: 'center', width: 40 },
   stepCircle: {
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: Colors.blue50, borderWidth: 2, borderColor: Colors.blue200,
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#FFF4ED', borderWidth: 2, borderColor: '#FFD4B3',
     alignItems: 'center', justifyContent: 'center',
   },
-  stepLine: { width: 2, flex: 1, backgroundColor: Colors.blue200, marginVertical: 4 },
-  stepContent: { flex: 1, paddingBottom: 24, paddingTop: 8 },
+  stepLine: { width: 2, flex: 1, backgroundColor: '#FFD4B3', marginVertical: 4 },
+  stepCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+    marginBottom: 12,
+  },
   stepNumBadge: {
-    alignSelf: 'flex-start', backgroundColor: Colors.primary + '15',
-    borderRadius: BorderRadius.full, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 6,
+    alignSelf: 'flex-start', backgroundColor: '#FFF4ED',
+    borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2, marginBottom: 5,
   },
-  stepNum: { fontSize: 10, fontWeight: FontWeight.bold, color: Colors.primary, textTransform: 'uppercase', letterSpacing: 0.5 },
-  stepTitle: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.darkNavy },
-  stepDesc: { fontSize: FontSize.sm, color: Colors.slate500, marginTop: 4, lineHeight: 19 },
-  faqHeading: { fontSize: FontSize.xxl, fontWeight: FontWeight.bold, color: Colors.darkNavy, marginBottom: 14 },
+  stepNum: { fontSize: 9, fontWeight: '700', color: '#FF6B00', textTransform: 'uppercase', letterSpacing: 0.5 },
+  stepTitle: { fontSize: 15, fontWeight: '700', color: '#0D0D0D', letterSpacing: -0.2 },
+  stepDesc: { fontSize: 12, color: '#888', marginTop: 3, lineHeight: 17 },
+  faqHeading: { fontSize: 17, fontWeight: '700', color: '#0D0D0D', marginBottom: 12, marginTop: 8, letterSpacing: -0.3 },
   faqItem: {
-    backgroundColor: Colors.white, borderRadius: 14, marginBottom: 8, padding: 16, ...Shadows.card,
+    backgroundColor: '#FFFFFF', borderRadius: 14, marginBottom: 8, padding: 14,
+    borderWidth: 1, borderColor: '#ECECEC',
   },
-  faqHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  faqQ: { flex: 1, fontSize: FontSize.base, fontWeight: FontWeight.semibold, color: Colors.darkNavy, lineHeight: 20 },
-  faqA: { fontSize: FontSize.sm, color: Colors.slate500, marginTop: 10, lineHeight: 19 },
-  cta: { backgroundColor: Colors.white, borderRadius: 18, padding: 22, marginTop: 20, alignItems: 'center', ...Shadows.card },
-  ctaTitle: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.darkNavy, marginBottom: 16 },
-  ctaBtns: { flexDirection: 'row', gap: 12, width: '100%' },
+  faqHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  faqQ: { flex: 1, fontSize: 13, fontWeight: '600', color: '#0D0D0D', lineHeight: 18 },
+  faqA: { fontSize: 12, color: '#888', marginTop: 8, lineHeight: 17 },
+  cta: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, marginTop: 16, alignItems: 'center', borderWidth: 1, borderColor: '#ECECEC' },
+  ctaTitle: { fontSize: 16, fontWeight: '700', color: '#0D0D0D', marginBottom: 14, letterSpacing: -0.2 },
+  ctaBtns: { flexDirection: 'row', gap: 10, width: '100%' },
   ctaPrimary: {
-    flex: 1, height: 50, backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.md, alignItems: 'center', justifyContent: 'center',
+    flex: 1, height: 48, backgroundColor: '#FF6B00',
+    borderRadius: 14, alignItems: 'center', justifyContent: 'center',
   },
-  ctaPrimaryText: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.white },
+  ctaPrimaryText: { fontSize: 14, fontWeight: '700', color: '#fff' },
   ctaSecondary: {
-    flex: 1, height: 50, borderWidth: 1.5, borderColor: Colors.primary,
-    borderRadius: BorderRadius.md, alignItems: 'center', justifyContent: 'center',
+    flex: 1, height: 48, borderWidth: 1, borderColor: '#FF6B00',
+    borderRadius: 14, alignItems: 'center', justifyContent: 'center',
   },
-  ctaSecondaryText: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.primary },
+  ctaSecondaryText: { fontSize: 14, fontWeight: '700', color: '#FF6B00' },
 });

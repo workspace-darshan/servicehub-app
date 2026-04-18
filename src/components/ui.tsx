@@ -30,7 +30,7 @@ export const Button: React.FC<ButtonProps> = ({
   size = 'lg',
   style,
 }) => {
-  const height = size === 'lg' ? 56 : 44;
+  const height = size === 'lg' ? 48 : 40;
 
   const bgColor =
     variant === 'primary'
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   inputContainer: {
-    height: 56,
+    height: 48,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.card,
@@ -381,6 +381,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.lg,
     color: Colors.darkNavy,
     height: '100%',
+    outlineStyle: 'none',
   },
   errorText: {
     fontSize: FontSize.sm,

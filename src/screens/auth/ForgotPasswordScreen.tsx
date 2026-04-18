@@ -109,12 +109,12 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
-    width: '100%', height: 52, borderWidth: 1.5, borderColor: Colors.border,
+    width: '100%', height: 48, borderWidth: 1.5, borderColor: Colors.border,
     borderRadius: BorderRadius.md, paddingHorizontal: 14, backgroundColor: Colors.white,
   },
-  bareInput: { flex: 1, fontSize: FontSize.base, color: Colors.darkNavy, borderWidth: 0, padding: 0, height: 52, backgroundColor: 'transparent' },
+  bareInput: { flex: 1, fontSize: FontSize.base, color: Colors.darkNavy, borderWidth: 0, padding: 0, height: 48, backgroundColor: 'transparent', outlineStyle: 'none' },
   submitBtn: {
-    width: '100%', height: 54, backgroundColor: Colors.primary, borderRadius: BorderRadius.md,
+    width: '100%', height: 48, backgroundColor: Colors.primary, borderRadius: BorderRadius.md,
     alignItems: 'center', justifyContent: 'center',
   },
   submitText: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.3 },

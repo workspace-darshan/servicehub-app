@@ -1,11 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  ScrollView,
+  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -48,25 +48,21 @@ const SLIDES = [
 
 export const OnboardingScreen = ({ navigation }: any) => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const scrollRef = useRef<ScrollView>(null);
-
-  const goToSlide = (index: number) => {
-    scrollRef.current?.scrollTo({ x: index * width, animated: true });
-    setCurrentSlide(index);
-  };
 
   const handleNext = () => {
     if (currentSlide < SLIDES.length - 1) {
-      goToSlide(currentSlide + 1);
+      setCurrentSlide(currentSlide + 1);
     }
   };
 
-  const handleScroll = (e: any) => {
-    const slide = Math.round(e.nativeEvent.contentOffset.x / width);
-    setCurrentSlide(slide);
+  const handleBack = () => {
+    if (currentSlide > 0) {
+      setCurrentSlide(currentSlide - 1);
+    }
   };
 
   const isLast = currentSlide === SLIDES.length - 1;
+  const slide = SLIDES[currentSlide];
 
   return (
     <View style={styles.container}>
@@ -77,93 +73,79 @@ export const OnboardingScreen = ({ navigation }: any) => {
         <Text style={styles.skipText}>Skip</Text>
       </TouchableOpacity>
 
-      {/* Slides */}
-      <ScrollView
-        ref={scrollRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={handleScroll}
-        scrollEventThrottle={16}
-        style={{ flex: 1 }}>
-        {SLIDES.map((slide, index) => (
-          <View key={slide.id} style={{ width }}>
-            {/* Illustration area */}
-            <LinearGradient
-              colors={slide.bg}
-              style={styles.illustrationArea}>
-              {/* Large centered Ionicon */}
-              <View style={[styles.illustrationIconBg, { backgroundColor: slide.accent + '18', borderColor: slide.accent + '30' }]}>
-                <Ionicons name={slide.icon} size={80} color={slide.accent} />
-              </View>
-              {/* Floating badge */}
-              <View style={[styles.floatingBadge, { borderColor: slide.accent + '30' }]}>
-                <Ionicons name={slide.badgeIcon} size={13} color={slide.accent} />
-                <Text style={{ fontSize: 11, color: slide.accent, fontWeight: FontWeight.semibold }}>
-                  {slide.badgeText}
-                </Text>
-              </View>
-            </LinearGradient>
+      {/* Illustration area */}
+      <LinearGradient
+        colors={slide.bg}
+        style={styles.illustrationArea}>
+        {/* Large centered Ionicon */}
+        <View style={[styles.illustrationIconBg, { backgroundColor: slide.accent + '18', borderColor: slide.accent + '30' }]}>
+          <Ionicons name={slide.icon} size={80} color={slide.accent} />
+        </View>
+        {/* Floating badge */}
+        <View style={[styles.floatingBadge, { borderColor: slide.accent + '30' }]}>
+          <Ionicons name={slide.badgeIcon} size={13} color={slide.accent} />
+          <Text style={{ fontSize: 11, color: slide.accent, fontWeight: FontWeight.semibold }}>
+            {slide.badgeText}
+          </Text>
+        </View>
+      </LinearGradient>
 
-            {/* Content card */}
-            <View style={styles.contentCard}>
-              {/* Indicators */}
-              <View style={styles.indicators}>
-                {SLIDES.map((_, i) => (
-                  <View
-                    key={i}
-                    style={[
-                      styles.dot,
-                      i === currentSlide
-                        ? [styles.dotActive, { backgroundColor: slide.accent }]
-                        : styles.dotInactive,
-                    ]}
-                  />
-                ))}
-              </View>
+      {/* Content card */}
+      <View style={styles.contentCard}>
+        {/* Indicators */}
+        <View style={styles.indicators}>
+          {SLIDES.map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                i === currentSlide
+                  ? [styles.dotActive, { backgroundColor: slide.accent }]
+                  : styles.dotInactive,
+              ]}
+            />
+          ))}
+        </View>
 
-              <Text style={styles.heading}>{slide.title}</Text>
-              <Text style={styles.body}>{slide.body}</Text>
+        <Text style={styles.heading}>{slide.title}</Text>
+        <Text style={styles.body}>{slide.body}</Text>
 
-              {/* CTA */}
-              {isLast ? (
-                <View style={styles.ctaGroup}>
-                  <TouchableOpacity
-                    style={[styles.primaryBtn, { backgroundColor: Colors.primary }]}
-                    onPress={() => navigation.navigate('Register')}
-                    activeOpacity={0.85}>
-                    <Text style={styles.primaryBtnText}>Get Started — Sign Up</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.secondaryBtn}
-                    onPress={() => navigation.navigate('Login')}
-                    activeOpacity={0.85}>
-                    <Text style={styles.secondaryBtnText}>I Already Have an Account</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={styles.navRow}>
-                  {currentSlide > 0 && (
-                    <TouchableOpacity
-                      style={styles.backBtn}
-                      onPress={() => goToSlide(currentSlide - 1)}>
-                      <Text style={styles.backBtnText}>← Back</Text>
-                    </TouchableOpacity>
-                  )}
-                  <TouchableOpacity
-                    style={[styles.nextBtn, { flex: currentSlide > 0 ? 0.55 : 1, backgroundColor: Colors.primary }]}
-                    onPress={handleNext}
-                    activeOpacity={0.85}>
-                    <Text style={styles.nextBtnText}>Next →</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              <Text style={styles.stepLabel}>Step {currentSlide + 1} of {SLIDES.length}</Text>
-            </View>
+        {/* CTA */}
+        {isLast ? (
+          <View style={styles.ctaGroup}>
+            <TouchableOpacity
+              style={[styles.primaryBtn, { backgroundColor: Colors.primary }]}
+              onPress={() => navigation.navigate('Register')}
+              activeOpacity={0.85}>
+              <Text style={styles.primaryBtnText}>Get Started — Sign Up</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.secondaryBtn}
+              onPress={() => navigation.navigate('Login')}
+              activeOpacity={0.85}>
+              <Text style={styles.secondaryBtnText}>I Already Have an Account</Text>
+            </TouchableOpacity>
           </View>
-        ))}
-      </ScrollView>
+        ) : (
+          <View style={styles.navRow}>
+            {currentSlide > 0 && (
+              <TouchableOpacity
+                style={styles.backBtn}
+                onPress={handleBack}>
+                <Text style={styles.backBtnText}>← Back</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={[styles.nextBtn, { flex: currentSlide > 0 ? 0.55 : 1, backgroundColor: Colors.primary }]}
+              onPress={handleNext}
+              activeOpacity={0.85}>
+              <Text style={styles.nextBtnText}>Next →</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <Text style={styles.stepLabel}>Step {currentSlide + 1} of {SLIDES.length}</Text>
+      </View>
     </View>
   );
 };
@@ -251,34 +233,34 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.slate300,
   },
   heading: {
-    fontSize: FontSize.display,
+    fontSize: FontSize.h1,
     fontWeight: FontWeight.extrabold,
     color: Colors.darkNavy,
-    lineHeight: 36,
+    lineHeight: 32,
     marginBottom: 12,
   },
   body: {
-    fontSize: FontSize.lg,
+    fontSize: FontSize.base,
     color: Colors.slate500,
-    lineHeight: 24,
+    lineHeight: 22,
     marginBottom: 32,
   },
   ctaGroup: {
     gap: 12,
   },
   primaryBtn: {
-    height: 56,
+    height: 48,
     borderRadius: BorderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   primaryBtnText: {
-    fontSize: FontSize.xl,
+    fontSize: FontSize.lg,
     fontWeight: FontWeight.bold,
     color: Colors.white,
   },
   secondaryBtn: {
-    height: 56,
+    height: 48,
     borderRadius: BorderRadius.lg,
     borderWidth: 1.5,
     borderColor: Colors.primary,
@@ -286,7 +268,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   secondaryBtnText: {
-    fontSize: FontSize.xl,
+    fontSize: FontSize.lg,
     fontWeight: FontWeight.bold,
     color: Colors.primary,
   },
@@ -296,7 +278,7 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     flex: 0.4,
-    height: 56,
+    height: 48,
     borderRadius: BorderRadius.lg,
     borderWidth: 1.5,
     borderColor: Colors.border,
@@ -304,25 +286,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   backBtnText: {
-    fontSize: FontSize.xl,
+    fontSize: FontSize.lg,
     fontWeight: FontWeight.semibold,
     color: Colors.slate500,
   },
   nextBtn: {
-    height: 56,
+    height: 48,
     borderRadius: BorderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   nextBtnText: {
-    fontSize: FontSize.xl,
+    fontSize: FontSize.lg,
     fontWeight: FontWeight.bold,
     color: Colors.white,
   },
   stepLabel: {
     textAlign: 'center',
     marginTop: 16,
-    fontSize: FontSize.xs,
+    fontSize: 10,
     color: Colors.slate400,
     textTransform: 'uppercase',
     letterSpacing: 1.5,

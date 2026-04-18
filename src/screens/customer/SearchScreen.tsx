@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, FlatList,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, FontSize, FontWeight, BorderRadius, Shadows } from '../../constants/theme';
+import { Colors, FontSize, FontWeight, BorderRadius } from '../../constants/theme';
 
 const RECENT = ['Plumber', 'AC Repair', 'Electrician'];
 const POPULAR = [
@@ -64,7 +64,7 @@ export const SearchScreen = ({ navigation }: any) => {
               <TouchableOpacity key={r} style={styles.recentRow} onPress={() => setQuery(r)}>
                 <Ionicons name="time-outline" size={16} color={Colors.slate400} />
                 <Text style={styles.recentText}>{r}</Text>
-                <TouchableOpacity onPress={() => {}}>
+                <TouchableOpacity onPress={() => { }}>
                   <Ionicons name="close" size={14} color={Colors.slate300} />
                 </TouchableOpacity>
               </TouchableOpacity>
@@ -139,16 +139,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.white },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: 16, paddingTop: 52, paddingBottom: 12,
+    paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12,
     borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
   backBtn: { width: 36, height: 36, justifyContent: 'center' },
   searchBox: {
     flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
-    height: 44, backgroundColor: Colors.background, borderRadius: BorderRadius.full,
+    height: 48, backgroundColor: Colors.white, borderRadius: BorderRadius.md,
     paddingHorizontal: 14, borderWidth: 1.5, borderColor: Colors.border,
   },
-  searchInput: { flex: 1, fontSize: FontSize.base, color: Colors.darkNavy },
+  searchInput: { flex: 1, fontSize: FontSize.base, color: Colors.darkNavy, height: 48, padding: 0, outlineStyle: 'none' },
   scroll: { padding: 20, paddingBottom: 60 },
   sectionLabel: {
     fontSize: 10, fontWeight: FontWeight.bold, color: Colors.slate400,

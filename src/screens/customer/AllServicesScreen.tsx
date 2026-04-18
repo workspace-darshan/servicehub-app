@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput,
+  View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Dimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, FontSize, FontWeight, BorderRadius, Shadows } from '../../constants/theme';
 import { SERVICES } from '../../data/mockData';
+import { TopBar } from '../../components/TopBar';
 
 const CATEGORIES = ['All', 'Repair', 'Cleaning', 'Installation', 'Other'];
 
@@ -19,7 +19,40 @@ const SERVICE_ICON_MAP: Record<string, string> = {
   'Sofa Cleaning': 'bed-outline', 'Pest Control': 'bug-outline', 'Laptop Repair': 'laptop-outline',
   'Mobile Repair': 'phone-portrait-outline', Locksmith: 'key-outline',
 };
+
+const SERVICE_COLORS = [
+  { bg: '#EDE9FE', icon: '#7C3AED' },
+  { bg: '#FEF9C3', icon: '#CA8A04' },
+  { bg: '#DCFCE7', icon: '#16A34A' },
+  { bg: '#FFE4E6', icon: '#E11D48' },
+  { bg: '#E0F2FE', icon: '#0284C7' },
+  { bg: '#FEF3C7', icon: '#D97706' },
+  { bg: '#F3E8FF', icon: '#9333EA' },
+  { bg: '#F0FDF4', icon: '#15803D' },
+  { bg: '#DBEAFE', icon: '#3B82F6' },
+  { bg: '#FEE2E2', icon: '#EF4444' },
+  { bg: '#FCE7F3', icon: '#D946EF' },
+  { bg: '#D1FAE5', icon: '#10B981' },
+  { bg: '#FED7AA', icon: '#F97316' },
+  { bg: '#E0F2FE', icon: '#06B6D4' },
+  { bg: '#E0E7FF', icon: '#6366F1' },
+  { bg: '#FEF08A', icon: '#EAB308' },
+  { bg: '#BFDBFE', icon: '#2563EB' },
+  { bg: '#FECACA', icon: '#DC2626' },
+  { bg: '#BBF7D0', icon: '#16A34A' },
+  { bg: '#FBCFE8', icon: '#DB2777' },
+];
+
 const getIcon = (name: string) => SERVICE_ICON_MAP[name] || 'construct-outline';
+const getColorSet = (index: number) => SERVICE_COLORS[index % SERVICE_COLORS.length];
+
+const screenWidth = Dimensions.get('window').width;
+const numColumns = 6;
+const gap = 6;
+const horizontalPadding = 40; // 20px on each side
+const totalGaps = gap * (numColumns - 1);
+const availableWidth = screenWidth - horizontalPadding - totalGaps;
+const itemWidth = Math.floor(availableWidth / numColumns);
 
 export const AllServicesScreen = ({ navigation }: any) => {
   const [search, setSearch] = useState('');
@@ -35,25 +68,23 @@ export const AllServicesScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       <StatusBar style="dark" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>All Services</Text>
-        <Text style={styles.headerCount}>{filtered.length} services</Text>
-      </View>
+      <TopBar
+        title="All Services"
+        subtitle={`${filtered.length} services available`}
+      />
 
-      {/* Search */}
       <View style={styles.searchWrap}>
-        <Ionicons name="search-outline" size={18} color={Colors.slate400} />
+        <Ionicons name="search-outline" size={15} color="#bbb" />
         <TextInput
           style={styles.searchInput}
           placeholder="Search services..."
-          placeholderTextColor={Colors.slate400}
+          placeholderTextColor="#bbb"
           value={search}
           onChangeText={setSearch}
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')}>
-            <Ionicons name="close-circle" size={18} color={Colors.slate400} />
+            <Ionicons name="close-circle" size={18} color="#888" />
           </TouchableOpacity>
         )}
       </View>
@@ -74,29 +105,27 @@ export const AllServicesScreen = ({ navigation }: any) => {
       <FlatList
         data={filtered}
         keyExtractor={item => item.id}
-        numColumns={2}
-        columnWrapperStyle={{ gap: 12 }}
+        numColumns={6}
         contentContainerStyle={styles.grid}
+        columnWrapperStyle={styles.columnWrapper}
         showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.serviceCard}
-            onPress={() => navigation.navigate('Providers', { service: item.name })}
-            activeOpacity={0.85}>
-            <View style={styles.iconBg}>
-              <Ionicons name={getIcon(item.name) as any} size={26} color={Colors.primary} />
-            </View>
-            <Text style={styles.serviceName}>{item.name}</Text>
-            <Text style={styles.serviceTagline} numberOfLines={2}>{item.tagline}</Text>
-            <View style={styles.cardFooter}>
-              <Text style={styles.catBadge}>{item.category}</Text>
-              <Ionicons name="chevron-forward" size={14} color={Colors.slate400} />
-            </View>
-          </TouchableOpacity>
-        )}
+        renderItem={({ item, index }) => {
+          const colorSet = getColorSet(index);
+          return (
+            <TouchableOpacity
+              style={[styles.serviceCard, { width: itemWidth }]}
+              onPress={() => navigation.navigate('Providers', { service: item.name })}
+              activeOpacity={0.7}>
+              <View style={[styles.iconBg, { backgroundColor: colorSet.bg }]}>
+                <Ionicons name={getIcon(item.name) as any} size={20} color={colorSet.icon} />
+              </View>
+              <Text style={styles.serviceName} numberOfLines={2}>{item.name}</Text>
+            </TouchableOpacity>
+          );
+        }}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Ionicons name="search-outline" size={48} color={Colors.slate300} />
+            <Ionicons name="search-outline" size={48} color="#ccc" />
             <Text style={styles.emptyTitle}>No services found</Text>
             <Text style={styles.emptyBody}>Try a different search or category</Text>
           </View>
@@ -107,44 +136,126 @@ export const AllServicesScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F4F0',
+  },
   header: {
-    flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingTop: 52, paddingBottom: 14,
-    backgroundColor: Colors.white, borderBottomWidth: 1, borderBottomColor: Colors.border,
-  },
-  headerTitle: { fontSize: FontSize.h1, fontWeight: FontWeight.extrabold, color: Colors.darkNavy },
-  headerCount: { fontSize: FontSize.sm, color: Colors.slate400 },
-  searchWrap: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    height: 52, backgroundColor: Colors.white, borderBottomWidth: 1, borderBottomColor: Colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 14,
+    backgroundColor: '#F5F4F0',
+    gap: 12,
   },
-  searchInput: { flex: 1, fontSize: FontSize.base, color: Colors.darkNavy, height: 52, paddingVertical: 0 },
+  backBtn: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    marginLeft: -10,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0D0D0D',
+    letterSpacing: -0.4,
+  },
+  headerCount: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 2,
+  },
+  searchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    height: 44,
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 12,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: '#0D0D0D',
+    height: 44,
+    paddingVertical: 0,
+    outlineWidth: 0,
+    outlineStyle: 'none',
+  } as any,
   catRow: {
-    flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingVertical: 12,
-    backgroundColor: Colors.white, borderBottomWidth: 1, borderBottomColor: Colors.border,
+    flexDirection: 'row',
+    gap: 7,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
   },
-  catChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: BorderRadius.full, backgroundColor: Colors.surfaceContainerLow },
-  catChipActive: { backgroundColor: Colors.primary },
-  catText: { fontSize: FontSize.sm, fontWeight: FontWeight.semibold, color: Colors.slate500 },
-  catTextActive: { color: Colors.white },
-  grid: { padding: 20, gap: 12, paddingBottom: 100 },
+  catChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+  },
+  catChipActive: {
+    backgroundColor: '#0D0D0D',
+    borderColor: '#0D0D0D',
+  },
+  catText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#666',
+  },
+  catTextActive: {
+    color: '#fff',
+  },
+  grid: {
+    padding: 20,
+    paddingBottom: 100,
+  },
+  columnWrapper: {
+    gap: 6,
+    marginBottom: 14,
+  },
   serviceCard: {
-    flex: 1, backgroundColor: Colors.white, borderRadius: 16, padding: 16, ...Shadows.card,
+    alignItems: 'center',
+    marginBottom: 0,
   },
   iconBg: {
-    width: 50, height: 50, borderRadius: 14, backgroundColor: Colors.blue50,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 5,
   },
-  serviceName: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.darkNavy },
-  serviceTagline: { fontSize: FontSize.xs, color: Colors.slate500, marginTop: 4, lineHeight: 16 },
-  cardFooter: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: Colors.border,
+  serviceName: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#555',
+    textAlign: 'center',
+    lineHeight: 13,
+    width: '100%',
+    paddingHorizontal: 2,
   },
-  catBadge: { fontSize: 10, fontWeight: FontWeight.bold, color: Colors.primary, textTransform: 'uppercase', letterSpacing: 0.5 },
-  empty: { paddingTop: 80, alignItems: 'center', gap: 8 },
-  emptyTitle: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.darkNavy },
-  emptyBody: { fontSize: FontSize.base, color: Colors.slate500 },
+  empty: {
+    paddingTop: 80,
+    alignItems: 'center',
+    gap: 8,
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#0D0D0D',
+  },
+  emptyBody: {
+    fontSize: 13,
+    color: '#888',
+  },
 });

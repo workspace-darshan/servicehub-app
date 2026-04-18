@@ -5,18 +5,17 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, FontSize, FontWeight, BorderRadius, Shadows } from '../../constants/theme';
 
 const ACCOUNT_ROWS = [
   { icon: 'person-outline', label: 'Edit Profile', screen: 'EditProfile' },
   { icon: 'lock-closed-outline', label: 'Change Password', screen: '' },
   { icon: 'notifications-outline', label: 'Notifications', screen: 'Settings' },
-  { icon: 'heart-outline', label: 'Saved Providers', screen: '' },
+  { icon: 'bookmark-outline', label: 'Saved Providers', screen: 'Saved' },
 ];
 
 const GENERAL_ROWS = [
   { icon: 'help-circle-outline', label: 'How It Works', screen: 'HowItWorks' },
-  { icon: 'information-circle-outline', label: 'About ServiceHub', screen: 'About' },
+  { icon: 'information-circle-outline', label: 'About Sevek', screen: 'About' },
   { icon: 'shield-outline', label: 'Privacy Policy', screen: '' },
   { icon: 'document-text-outline', label: 'Terms & Conditions', screen: '' },
   { icon: 'call-outline', label: 'Contact Support', screen: 'Contact' },
@@ -30,10 +29,10 @@ export const ProfileScreen = ({ navigation }: any) => {
       onPress={() => item.screen && navigation.navigate(item.screen)}
       activeOpacity={0.6}>
       <View style={styles.rowIcon}>
-        <Ionicons name={item.icon} size={18} color={Colors.primary} />
+        <Ionicons name={item.icon} size={18} color="#FF6B00" />
       </View>
       <Text style={styles.rowLabel}>{item.label}</Text>
-      <Ionicons name="chevron-forward" size={16} color={Colors.slate300} />
+      <Ionicons name="chevron-forward" size={16} color="#888" />
     </TouchableOpacity>
   );
 
@@ -44,13 +43,13 @@ export const ProfileScreen = ({ navigation }: any) => {
 
         {/* Header gradient */}
         <LinearGradient
-          colors={['#1D4ED8', '#0F172A']}
+          colors={['#FF6B00', '#FF9A3C'] as [string, string, ...string[]]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={styles.header}>
           <View style={styles.topBar}>
             <Text style={styles.headerTitle}>Profile</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.settingsBtn}>
-              <Ionicons name="settings-outline" size={22} color="rgba(255,255,255,0.8)" />
+              <Ionicons name="settings-outline" size={22} color="rgba(255,255,255,0.9)" />
             </TouchableOpacity>
           </View>
 
@@ -60,7 +59,7 @@ export const ProfileScreen = ({ navigation }: any) => {
               <Text style={styles.avatarText}>DP</Text>
             </View>
             <TouchableOpacity style={styles.cameraBtn} onPress={() => navigation.navigate('EditProfile')}>
-              <Ionicons name="camera-outline" size={14} color={Colors.white} />
+              <Ionicons name="camera-outline" size={14} color="#fff" />
             </TouchableOpacity>
           </View>
           <Text style={styles.name}>Darshan Patel</Text>
@@ -70,7 +69,7 @@ export const ProfileScreen = ({ navigation }: any) => {
           <View style={styles.statsRow}>
             {[
               { value: '4', label: 'Enquiries' },
-              { value: '3', label: 'Reviews Left' },
+              { value: '3', label: 'Reviews' },
               { value: '2026', label: 'Since' },
             ].map((stat, i) => (
               <React.Fragment key={stat.label}>
@@ -94,14 +93,14 @@ export const ProfileScreen = ({ navigation }: any) => {
             activeOpacity={0.85}>
             <View style={styles.providerBannerLeft}>
               <View style={styles.providerBannerIcon}>
-                <Ionicons name="construct-outline" size={22} color={Colors.accentOrange} />
+                <Ionicons name="construct-outline" size={22} color="#FF6B00" />
               </View>
               <View>
                 <Text style={styles.bannerTitle}>Become a Provider</Text>
                 <Text style={styles.bannerSubtext}>Earn by offering your expertise</Text>
               </View>
             </View>
-            <Ionicons name="arrow-forward" size={18} color={Colors.accentOrange} />
+            <Ionicons name="arrow-forward" size={18} color="#FF6B00" />
           </TouchableOpacity>
 
           {/* Account */}
@@ -118,11 +117,11 @@ export const ProfileScreen = ({ navigation }: any) => {
 
           {/* Logout */}
           <TouchableOpacity style={styles.logoutBtn} onPress={() => navigation.replace('Login')}>
-            <Ionicons name="log-out-outline" size={20} color={Colors.errorRed} />
+            <Ionicons name="log-out-outline" size={20} color="#E11D48" />
             <Text style={styles.logoutText}>Log Out</Text>
           </TouchableOpacity>
 
-          <Text style={styles.version}>ServiceHub v1.0.0</Text>
+          <Text style={styles.version}>Sevek v1.0.0</Text>
         </View>
       </ScrollView>
     </View>
@@ -130,70 +129,70 @@ export const ProfileScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: { paddingBottom: 28 },
+  container: { flex: 1, backgroundColor: '#F5F4F0' },
+  header: { paddingBottom: 20 },
   topBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingTop: 52, paddingBottom: 20,
+    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14,
   },
-  headerTitle: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.white },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: '#fff', letterSpacing: -0.4 },
   settingsBtn: { width: 40, height: 40, alignItems: 'flex-end', justifyContent: 'center' },
-  avatarArea: { alignSelf: 'center', position: 'relative', marginBottom: 12 },
+  avatarArea: { alignSelf: 'center', position: 'relative', marginBottom: 8 },
   avatar: {
-    width: 80, height: 80, borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.15)', borderWidth: 3, borderColor: 'rgba(255,255,255,0.4)',
+    width: 70, height: 70, borderRadius: 35,
+    backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 3, borderColor: 'rgba(255,255,255,0.5)',
     alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: { fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white },
+  avatarText: { fontSize: 24, fontWeight: '700', color: '#fff' },
   cameraBtn: {
     position: 'absolute', bottom: 0, right: 0,
     width: 26, height: 26, borderRadius: 13,
-    backgroundColor: Colors.primary, borderWidth: 2, borderColor: Colors.white,
+    backgroundColor: '#0D0D0D', borderWidth: 2.5, borderColor: '#fff',
     alignItems: 'center', justifyContent: 'center',
   },
-  name: { fontSize: FontSize.xxl, fontWeight: FontWeight.bold, color: Colors.white, textAlign: 'center' },
-  email: { fontSize: FontSize.md, color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginTop: 3 },
+  name: { fontSize: 18, fontWeight: '700', color: '#fff', textAlign: 'center', letterSpacing: -0.3 },
+  email: { fontSize: 12, color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginTop: 2 },
   statsRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    marginTop: 20, marginHorizontal: 24,
-    backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 14, paddingVertical: 14,
+    marginTop: 14, marginHorizontal: 24,
+    backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, paddingVertical: 10,
   },
-  stat: { flex: 1, alignItems: 'center', gap: 3 },
-  statValue: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.white },
-  statLabel: { fontSize: 10, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.5 },
-  statDivider: { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.15)' },
-  content: { paddingHorizontal: 20, paddingTop: 22 },
+  stat: { flex: 1, alignItems: 'center', gap: 2 },
+  statValue: { fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: -0.3 },
+  statLabel: { fontSize: 9, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: '600' },
+  statDivider: { width: 1, height: 24, backgroundColor: 'rgba(255,255,255,0.2)' },
+  content: { paddingHorizontal: 18, paddingTop: 16 },
   providerBanner: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#FFF7ED', borderRadius: 14, padding: 16,
-    borderWidth: 1.5, borderColor: '#FBCF9A', marginBottom: 24,
+    backgroundColor: '#FFF4ED', borderRadius: 16, padding: 13,
+    borderWidth: 1, borderColor: '#ECECEC', marginBottom: 18,
   },
-  providerBannerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  providerBannerLeft: { flexDirection: 'row', alignItems: 'center', gap: 11 },
   providerBannerIcon: {
-    width: 42, height: 42, borderRadius: 12, backgroundColor: '#FEF3C7',
+    width: 38, height: 38, borderRadius: 11, backgroundColor: '#FFF0E6',
     alignItems: 'center', justifyContent: 'center',
   },
-  bannerTitle: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: '#92400E' },
-  bannerSubtext: { fontSize: FontSize.sm, color: Colors.accentOrange, marginTop: 2 },
+  bannerTitle: { fontSize: 13, fontWeight: '700', color: '#0D0D0D', letterSpacing: -0.2 },
+  bannerSubtext: { fontSize: 10, color: '#888', marginTop: 1 },
   sectionTitle: {
-    fontSize: 11, fontWeight: FontWeight.bold, color: Colors.slate400,
-    textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10, marginTop: 4,
+    fontSize: 10, fontWeight: '700', color: '#888',
+    textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8, marginTop: 2,
   },
   rowGroup: {
-    backgroundColor: Colors.white, borderRadius: 14, marginBottom: 20,
-    overflow: 'hidden', ...Shadows.card,
+    backgroundColor: '#FFFFFF', borderRadius: 16, marginBottom: 16,
+    overflow: 'hidden', borderWidth: 1, borderColor: '#ECECEC',
   },
   row: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 15,
-    borderBottomWidth: 1, borderBottomColor: Colors.border, gap: 12,
+    paddingHorizontal: 14, paddingVertical: 12,
+    borderBottomWidth: 1, borderBottomColor: '#ECECEC', gap: 11,
   },
   rowIcon: {
     width: 34, height: 34, borderRadius: 10,
-    backgroundColor: Colors.blue50, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#FFF4ED', alignItems: 'center', justifyContent: 'center',
   },
-  rowLabel: { flex: 1, fontSize: FontSize.base, color: Colors.darkNavy, fontWeight: FontWeight.medium },
-  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16 },
-  logoutText: { fontSize: FontSize.lg, color: Colors.errorRed, fontWeight: FontWeight.bold },
-  version: { fontSize: FontSize.xs, color: Colors.slate300, textAlign: 'center', marginTop: 4, marginBottom: 8 },
+  rowLabel: { flex: 1, fontSize: 13, color: '#0D0D0D', fontWeight: '500' },
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 12, marginTop: 4 },
+  logoutText: { fontSize: 14, color: '#E11D48', fontWeight: '700' },
+  version: { fontSize: 10, color: '#888', textAlign: 'center', marginTop: 6, marginBottom: 8 },
 });

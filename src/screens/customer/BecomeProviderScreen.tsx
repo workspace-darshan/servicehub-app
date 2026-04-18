@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, ActivityIndicator, Modal,
+  TextInput, ActivityIndicator, Modal, useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, FontSize, FontWeight, BorderRadius, Shadows } from '../../constants/theme';
+import { TopBar } from '../../components/TopBar';
 import { SERVICES } from '../../data/mockData';
 
 const INDIAN_CITIES = ['Palanpur', 'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Gandhinagar', 'Mumbai', 'Pune', 'Delhi', 'Jaipur', 'Chandigarh', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata'];
@@ -19,32 +20,28 @@ const STEPS = [
   { key: 'review', label: 'Review', icon: 'checkmark-circle-outline' },
 ];
 
-// — Minimal Field Wrapper —
-const Field = ({ label, children, required }: any) => (
+// ── Field wrapper ─────────────────────────────────────────
+const Field = ({ label, children, required, hint }: any) => (
   <View style={styles.fieldBlock}>
-    <Text style={styles.fieldLabel}>{label}{required && <Text style={{ color: Colors.errorRed }}> *</Text>}</Text>
+    <Text style={styles.fieldLabel}>
+      {label}
+      {required && <Text style={{ color: '#EF4444' }}> *</Text>}
+    </Text>
+    {hint && <Text style={styles.fieldHint}>{hint}</Text>}
     {children}
   </View>
 );
 
-const textInput = (props: any) => (
-  <TextInput
-    style={styles.input}
-    placeholderTextColor={Colors.slate400}
-    {...props}
-  />
-);
-
-// — Picker row (tap to open simple list) —
+// ── Picker ────────────────────────────────────────────────
 const PickerRow = ({ value, placeholder, options, onSelect }: any) => {
   const [open, setOpen] = useState(false);
   return (
     <>
       <TouchableOpacity style={styles.pickerTrigger} onPress={() => setOpen(true)}>
-        <Text style={value ? styles.pickerValueText : styles.pickerPlaceholder}>
+        <Text style={value ? styles.pickerValue : styles.pickerPlaceholder}>
           {value || placeholder}
         </Text>
-        <Ionicons name="chevron-down" size={16} color={Colors.slate400} />
+        <Ionicons name="chevron-down" size={15} color="#AAAAAA" />
       </TouchableOpacity>
       <Modal transparent visible={open} animationType="slide">
         <TouchableOpacity style={styles.modalOverlay} onPress={() => setOpen(false)} activeOpacity={1}>
@@ -57,10 +54,10 @@ const PickerRow = ({ value, placeholder, options, onSelect }: any) => {
                   key={opt}
                   style={[styles.pickerOption, value === opt && styles.pickerOptionActive]}
                   onPress={() => { onSelect(opt); setOpen(false); }}>
-                  <Text style={[styles.pickerOptionText, value === opt && { color: Colors.primary, fontWeight: FontWeight.bold }]}>
+                  <Text style={[styles.pickerOptionText, value === opt && styles.pickerOptionTextActive]}>
                     {opt}
                   </Text>
-                  {value === opt && <Ionicons name="checkmark" size={16} color={Colors.primary} />}
+                  {value === opt && <Ionicons name="checkmark" size={16} color="#FF6B00" />}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -71,10 +68,13 @@ const PickerRow = ({ value, placeholder, options, onSelect }: any) => {
   );
 };
 
+// ── Main Screen ───────────────────────────────────────────
 export const BecomeProviderScreen = ({ navigation }: any) => {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [successVisible, setSuccessVisible] = useState(false);
+  const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   // Form state
   const [businessName, setBusinessName] = useState('');
@@ -103,23 +103,33 @@ export const BecomeProviderScreen = ({ navigation }: any) => {
 
   const handleSubmit = () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setSuccessVisible(true);
-    }, 1800);
+    setTimeout(() => { setLoading(false); setSuccessVisible(true); }, 1800);
   };
 
-  // — Step Renderers —
+  // ── Step renderers ──────────────────────────────────────
   const renderStep0 = () => (
-    <View style={{ gap: 4 }}>
+    <View style={styles.stepContent}>
+      <Text style={styles.stepTitle}>Tell us about your business</Text>
+      <Text style={styles.stepSubtitle}>This information helps customers understand your services better</Text>
+
       <Field label="Business Name" required>
-        {textInput({ value: businessName, onChangeText: setBusinessName, placeholder: 'e.g. Kumar Plumbing Services' })}
+        <TextInput
+          style={styles.input}
+          value={businessName}
+          onChangeText={setBusinessName}
+          placeholder="e.g. Kumar Plumbing Services"
+          placeholderTextColor="#AAAAAA"
+        />
+        {businessName.trim().length > 0 && businessName.trim().length < 2 && (
+          <Text style={styles.errorText}>Minimum 2 characters required</Text>
+        )}
       </Field>
+
       <Field label="Business Description" required>
         <TextInput
           style={[styles.input, styles.textarea]}
-          placeholderTextColor={Colors.slate400}
           placeholder="Describe your business, expertise, and what makes you stand out... (min 20 characters)"
+          placeholderTextColor="#AAAAAA"
           multiline
           numberOfLines={5}
           value={description}
@@ -127,16 +137,31 @@ export const BecomeProviderScreen = ({ navigation }: any) => {
           textAlignVertical="top"
           maxLength={500}
         />
-        <Text style={styles.charCount}>{description.length}/500</Text>
+        <View style={styles.charCountRow}>
+          {description.trim().length > 0 && description.trim().length < 20 && (
+            <Text style={styles.errorText}>At least 20 characters required</Text>
+          )}
+          <Text style={[styles.charCount, { marginLeft: 'auto' }]}>{description.length}/500</Text>
+        </View>
       </Field>
     </View>
   );
 
   const renderStep1 = () => (
-    <View style={{ gap: 4 }}>
+    <View style={styles.stepContent}>
+      <Text style={styles.stepTitle}>Where is your business?</Text>
+      <Text style={styles.stepSubtitle}>This helps customers find you in their area</Text>
+
       <Field label="Street Address" required>
-        {textInput({ value: street, onChangeText: setStreet, placeholder: '123 Main Street, Area' })}
+        <TextInput
+          style={styles.input}
+          value={street}
+          onChangeText={setStreet}
+          placeholder="123 Main Street, Area"
+          placeholderTextColor="#AAAAAA"
+        />
       </Field>
+
       <View style={styles.twoCol}>
         <View style={{ flex: 1 }}>
           <Field label="City" required>
@@ -149,51 +174,77 @@ export const BecomeProviderScreen = ({ navigation }: any) => {
           </Field>
         </View>
       </View>
+
       <Field label="ZIP Code" required>
-        {textInput({ value: zipCode, onChangeText: setZipCode, placeholder: '385001', keyboardType: 'numeric', maxLength: 6 })}
+        <TextInput
+          style={styles.input}
+          value={zipCode}
+          onChangeText={setZipCode}
+          placeholder="385001"
+          placeholderTextColor="#AAAAAA"
+          keyboardType="numeric"
+          maxLength={6}
+        />
+        {zipCode.length > 0 && zipCode.length !== 6 && (
+          <Text style={styles.errorText}>ZIP code must be 6 digits</Text>
+        )}
       </Field>
+
       <Field label="Google Maps Link (Optional)">
-        {textInput({ value: addressLink, onChangeText: setAddressLink, placeholder: 'https://maps.google.com/...' })}
+        <TextInput
+          style={styles.input}
+          value={addressLink}
+          onChangeText={setAddressLink}
+          placeholder="https://maps.google.com/..."
+          placeholderTextColor="#AAAAAA"
+        />
       </Field>
     </View>
   );
 
   const renderStep2 = () => (
-    <View style={{ gap: 4 }}>
-      <Field label="Services You Offer" required>
-        <Text style={styles.fieldHint}>Select up to 6 services</Text>
+    <View style={styles.stepContent}>
+      <Text style={styles.stepTitle}>What services do you provide?</Text>
+      <Text style={styles.stepSubtitle}>Select up to 6 services you offer</Text>
+
+      <Field label="Services You Offer" required hint={`${selectedServices.length}/6 selected`}>
         <View style={styles.servicesGrid}>
           {SERVICES.slice(0, 16).map(s => {
             const active = selectedServices.includes(s.name);
             return (
               <TouchableOpacity
                 key={s.id}
-                style={[styles.serviceChip, active && styles.serviceChipActive]}
+                style={[styles.chip, active && styles.chipActive]}
                 onPress={() => toggleService(s.name)}>
-                {active && <Ionicons name="checkmark-circle" size={13} color={Colors.primary} />}
-                <Text style={[styles.serviceChipText, active && { color: Colors.primary, fontWeight: FontWeight.bold }]}>
-                  {s.name}
-                </Text>
+                {active && <Ionicons name="checkmark-circle" size={12} color="#FF6B00" />}
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>{s.name}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
+        {selectedServices.length === 0 && (
+          <Text style={styles.errorText}>Please select at least one service</Text>
+        )}
       </Field>
 
       <Field label="Service Area" required>
-        {textInput({ value: serviceArea, onChangeText: setServiceArea, placeholder: 'e.g. Palanpur, Banaskantha' })}
+        <TextInput
+          style={styles.input}
+          value={serviceArea}
+          onChangeText={setServiceArea}
+          placeholder="e.g. Palanpur, Banaskantha"
+          placeholderTextColor="#AAAAAA"
+        />
       </Field>
 
-      <Field label="Service Radius">
+      <Field label="Service Radius" hint="How far are you willing to travel?">
         <View style={styles.radiusRow}>
           {SERVICE_RADII.map(r => (
             <TouchableOpacity
               key={r}
-              style={[styles.radiusChip, serviceRadius === r && styles.radiusChipActive]}
+              style={[styles.chip, serviceRadius === r && styles.chipActive]}
               onPress={() => setServiceRadius(r)}>
-              <Text style={[styles.radiusChipText, serviceRadius === r && { color: Colors.primary, fontWeight: FontWeight.bold }]}>
-                {r} km
-              </Text>
+              <Text style={[styles.chipText, serviceRadius === r && styles.chipTextActive]}>{r} km</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -202,8 +253,10 @@ export const BecomeProviderScreen = ({ navigation }: any) => {
   );
 
   const renderStep3 = () => (
-    <View style={{ gap: 12 }}>
-      <Text style={styles.reviewTitle}>Review Your Details</Text>
+    <View style={styles.stepContent}>
+      <Text style={styles.stepTitle}>Review Your Details</Text>
+      <Text style={styles.stepSubtitle}>Verify all information before submitting</Text>
+
       {[
         { icon: 'business-outline', label: 'Business Name', value: businessName },
         { icon: 'document-text-outline', label: 'Description', value: description },
@@ -212,8 +265,8 @@ export const BecomeProviderScreen = ({ navigation }: any) => {
         { icon: 'navigate-circle-outline', label: 'Service Area', value: `${serviceArea} (${serviceRadius} km radius)` },
       ].map(item => (
         <View key={item.label} style={styles.reviewRow}>
-          <View style={styles.reviewIcon}>
-            <Ionicons name={item.icon as any} size={18} color={Colors.primary} />
+          <View style={styles.reviewIconBox}>
+            <Ionicons name={item.icon as any} size={16} color="#FF6B00" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.reviewLabel}>{item.label}</Text>
@@ -225,54 +278,56 @@ export const BecomeProviderScreen = ({ navigation }: any) => {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { height }]}>
       <StatusBar style="dark" />
+      <TopBar
+        title="Become a Provider"
+        onBack={() => step > 0 ? setStep(step - 1) : navigation.goBack()}
+      />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => step > 0 ? setStep(step - 1) : navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={Colors.darkNavy} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Become a Provider</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      {/* Step progress */}
-      <View style={styles.stepperWrap}>
+      {/* Step indicator */}
+      <View style={styles.stepper}>
         {STEPS.map((s, i) => {
           const done = i < step;
           const active = i === step;
           return (
             <React.Fragment key={s.key}>
               <View style={styles.stepItem}>
-                <View style={[styles.stepCircle, done && styles.stepDone, active && styles.stepActive]}>
+                <View style={[styles.stepDot, active && styles.stepDotActive, done && styles.stepDotDone]}>
                   {done
-                    ? <Ionicons name="checkmark" size={14} color={Colors.white} />
-                    : <Ionicons name={s.icon as any} size={14} color={active ? Colors.white : Colors.slate400} />}
+                    ? <Ionicons name="checkmark" size={13} color="#fff" />
+                    : <Text style={[styles.stepDotNum, active && { color: '#fff' }]}>{i + 1}</Text>
+                  }
                 </View>
-                <Text style={[styles.stepLabel, active && { color: Colors.primary, fontWeight: FontWeight.bold }]}>{s.label}</Text>
+                <Text style={[styles.stepItemLabel, active && styles.stepItemLabelActive, done && styles.stepItemLabelDone]}>
+                  {s.label}
+                </Text>
               </View>
               {i < STEPS.length - 1 && (
-                <View style={[styles.stepConnector, done && { backgroundColor: Colors.primary }]} />
+                <View style={[styles.stepConnector, done && styles.stepConnectorDone]} />
               )}
             </React.Fragment>
           );
         })}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 40 }]}
+        keyboardShouldPersistTaps="handled"
+        bounces={true}
+      >
         {step === 0 && renderStep0()}
         {step === 1 && renderStep1()}
         {step === 2 && renderStep2()}
         {step === 3 && renderStep3()}
 
-        <View style={{ height: 24 }} />
-
-        {/* Navigation buttons */}
+        {/* Buttons */}
         <View style={styles.btnRow}>
           {step > 0 && (
             <TouchableOpacity style={styles.prevBtn} onPress={() => setStep(step - 1)}>
-              <Ionicons name="chevron-back" size={18} color={Colors.slate500} />
+              <Ionicons name="chevron-back" size={17} color="#555" />
               <Text style={styles.prevBtnText}>Back</Text>
             </TouchableOpacity>
           )}
@@ -282,7 +337,7 @@ export const BecomeProviderScreen = ({ navigation }: any) => {
               onPress={() => setStep(step + 1)}
               disabled={!canNext()}>
               <Text style={styles.nextBtnText}>Continue</Text>
-              <Ionicons name="chevron-forward" size={18} color={Colors.white} />
+              <Ionicons name="chevron-forward" size={17} color="#fff" />
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
@@ -290,9 +345,9 @@ export const BecomeProviderScreen = ({ navigation }: any) => {
               onPress={handleSubmit}
               disabled={loading}>
               {loading
-                ? <ActivityIndicator color={Colors.white} size="small" />
+                ? <ActivityIndicator color="#fff" size="small" />
                 : <>
-                  <Ionicons name="checkmark-circle-outline" size={18} color={Colors.white} />
+                  <Ionicons name="checkmark-circle-outline" size={17} color="#fff" />
                   <Text style={styles.nextBtnText}>Submit & Become Provider</Text>
                 </>}
             </TouchableOpacity>
@@ -304,8 +359,8 @@ export const BecomeProviderScreen = ({ navigation }: any) => {
       <Modal transparent visible={successVisible} animationType="fade">
         <View style={styles.successOverlay}>
           <View style={styles.successCard}>
-            <View style={styles.successIconBg}>
-              <Ionicons name="checkmark-circle" size={56} color={Colors.successGreen} />
+            <View style={styles.successIconBox}>
+              <Ionicons name="checkmark-circle" size={52} color="#22C55E" />
             </View>
             <Text style={styles.successTitle}>You're now a Provider! 🎉</Text>
             <Text style={styles.successBody}>
@@ -313,10 +368,7 @@ export const BecomeProviderScreen = ({ navigation }: any) => {
             </Text>
             <TouchableOpacity
               style={styles.successBtn}
-              onPress={() => {
-                setSuccessVisible(false);
-                navigation.replace('ProviderTabs');
-              }}>
+              onPress={() => { setSuccessVisible(false); navigation.replace('ProviderTabs'); }}>
               <Text style={styles.successBtnText}>Go to Provider Dashboard</Text>
             </TouchableOpacity>
           </View>
@@ -327,118 +379,136 @@ export const BecomeProviderScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingTop: 52, paddingBottom: 14,
-    backgroundColor: Colors.white, borderBottomWidth: 1, borderBottomColor: Colors.border,
-  },
-  backBtn: { width: 40, height: 40, justifyContent: 'center' },
-  headerTitle: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.darkNavy },
-  stepperWrap: {
+  container: { backgroundColor: '#F5F4F0', overflow: 'hidden' },
+  scrollView: { flex: 1 },
+  scroll: { padding: 18 },
+
+  // ── Stepper ───────────────────────────────────────────
+  stepper: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 20, paddingVertical: 16,
-    backgroundColor: Colors.white, borderBottomWidth: 1, borderBottomColor: Colors.border,
+    paddingHorizontal: 18, paddingVertical: 14,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1, borderBottomColor: '#ECECEC',
   },
   stepItem: { alignItems: 'center', gap: 4 },
-  stepCircle: {
+  stepDot: {
     width: 30, height: 30, borderRadius: 15,
-    backgroundColor: Colors.surfaceContainerLow, borderWidth: 1.5, borderColor: Colors.border,
+    backgroundColor: '#F5F4F0', borderWidth: 1.5, borderColor: '#ECECEC',
     alignItems: 'center', justifyContent: 'center',
   },
-  stepDone: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  stepActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  stepLabel: { fontSize: 9, color: Colors.slate400, fontWeight: FontWeight.medium, textTransform: 'uppercase', letterSpacing: 0.5 },
-  stepConnector: { flex: 1, height: 2, backgroundColor: Colors.border, marginBottom: 14, marginHorizontal: 4 },
-  scroll: { padding: 20, paddingBottom: 40 },
-  fieldBlock: { marginBottom: 18 },
-  fieldLabel: {
-    fontSize: 11, fontWeight: FontWeight.bold, color: Colors.slate500,
-    textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8,
-  },
-  fieldHint: { fontSize: FontSize.xs, color: Colors.slate400, marginBottom: 10 },
+  stepDotActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
+  stepDotDone: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
+  stepDotNum: { fontSize: 11, fontWeight: '700', color: '#AAAAAA' },
+  stepItemLabel: { fontSize: 9, fontWeight: '600', color: '#AAAAAA', textTransform: 'uppercase', letterSpacing: 0.4 },
+  stepItemLabelActive: { color: '#FF6B00' },
+  stepItemLabelDone: { color: '#FF6B00' },
+  stepConnector: { flex: 1, height: 2, backgroundColor: '#ECECEC', marginBottom: 14 },
+  stepConnectorDone: { backgroundColor: '#FF6B00' },
+
+  // ── Step content ──────────────────────────────────────
+  stepContent: { gap: 2, marginBottom: 20 },
+  stepTitle: { fontSize: 18, fontWeight: '700', color: '#0D0D0D', marginBottom: 4, letterSpacing: -0.3 },
+  stepSubtitle: { fontSize: 12, color: '#888', lineHeight: 18, marginBottom: 16 },
+
+  // ── Fields ────────────────────────────────────────────
+  fieldBlock: { marginBottom: 16 },
+  fieldLabel: { fontSize: 10, fontWeight: '700', color: '#AAAAAA', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 },
+  fieldHint: { fontSize: 11, color: '#AAAAAA', marginBottom: 8, marginTop: -2 },
   input: {
-    height: 52, borderWidth: 1.5, borderColor: Colors.border, borderRadius: BorderRadius.md,
-    backgroundColor: Colors.white, paddingHorizontal: 14,
-    fontSize: FontSize.base, color: Colors.darkNavy, paddingVertical: 0,
-  },
-  textarea: { height: 120, paddingTop: 14, textAlignVertical: 'top' },
-  charCount: { fontSize: FontSize.xs, color: Colors.slate400, textAlign: 'right', marginTop: 4 },
-  twoCol: { flexDirection: 'row', gap: 12 },
+    height: 48, borderWidth: 1.5, borderColor: '#ECECEC', borderRadius: 12,
+    backgroundColor: '#FFFFFF', paddingHorizontal: 14,
+    fontSize: 13, color: '#0D0D0D',
+    outlineWidth: 0, outlineStyle: 'none',
+  } as any,
+  textarea: { height: 110, paddingTop: 12, textAlignVertical: 'top' },
+  charCount: { fontSize: 11, color: '#AAAAAA', textAlign: 'right', marginTop: 4 },
+  charCountRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
+  errorText: { fontSize: 11, color: '#EF4444', marginTop: 4 },
+  twoCol: { flexDirection: 'row', gap: 10 },
+
+  // ── Picker ────────────────────────────────────────────
   pickerTrigger: {
-    height: 52, borderWidth: 1.5, borderColor: Colors.border, borderRadius: BorderRadius.md,
-    backgroundColor: Colors.white, paddingHorizontal: 14,
+    height: 48, borderWidth: 1.5, borderColor: '#ECECEC', borderRadius: 12,
+    backgroundColor: '#FFFFFF', paddingHorizontal: 14,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-  },
-  pickerValueText: { fontSize: FontSize.base, color: Colors.darkNavy },
-  pickerPlaceholder: { fontSize: FontSize.base, color: Colors.slate400 },
+    outlineWidth: 0, outlineStyle: 'none',
+  } as any,
+  pickerValue: { fontSize: 13, color: '#0D0D0D' },
+  pickerPlaceholder: { fontSize: 13, color: '#AAAAAA' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   pickerSheet: {
-    backgroundColor: Colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: '#FFFFFF', borderTopLeftRadius: 22, borderTopRightRadius: 22,
     padding: 20, paddingBottom: 40,
   },
-  pickerHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: Colors.border, alignSelf: 'center', marginBottom: 16 },
-  pickerSheetTitle: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.darkNavy, marginBottom: 12 },
+  pickerHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: '#ECECEC', alignSelf: 'center', marginBottom: 14 },
+  pickerSheetTitle: { fontSize: 15, fontWeight: '700', color: '#0D0D0D', marginBottom: 12 },
   pickerOption: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.border,
+    paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
-  pickerOptionActive: { backgroundColor: Colors.blue50 },
-  pickerOptionText: { fontSize: FontSize.lg, color: Colors.darkNavy },
+  pickerOptionActive: { backgroundColor: '#FFF4ED' },
+  pickerOptionText: { fontSize: 14, color: '#0D0D0D' },
+  pickerOptionTextActive: { color: '#FF6B00', fontWeight: '700' },
+
+  // ── Chips ─────────────────────────────────────────────
   servicesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
-  serviceChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 12, paddingVertical: 8, borderRadius: BorderRadius.full,
-    borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.white,
-  },
-  serviceChipActive: { borderColor: Colors.primary, backgroundColor: Colors.blue50 },
-  serviceChipText: { fontSize: FontSize.sm, color: Colors.slate500, fontWeight: FontWeight.medium },
   radiusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  radiusChip: {
-    paddingHorizontal: 16, paddingVertical: 9,
-    borderRadius: BorderRadius.full, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.white,
+  chip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 13, paddingVertical: 8, borderRadius: 99,
+    borderWidth: 1.5, borderColor: '#ECECEC', backgroundColor: '#FFFFFF',
   },
-  radiusChipActive: { borderColor: Colors.primary, backgroundColor: Colors.blue50 },
-  radiusChipText: { fontSize: FontSize.sm, color: Colors.slate500 },
-  reviewTitle: { fontSize: FontSize.xxl, fontWeight: FontWeight.bold, color: Colors.darkNavy, marginBottom: 4 },
+  chipActive: { borderColor: '#FF6B00', backgroundColor: '#FFF4ED' },
+  chipText: { fontSize: 12, color: '#888', fontWeight: '500' },
+  chipTextActive: { color: '#FF6B00', fontWeight: '700' },
+
+  // ── Review rows ───────────────────────────────────────
   reviewRow: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 12,
-    backgroundColor: Colors.white, borderRadius: BorderRadius.md, padding: 14, ...Shadows.card,
+    backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14,
+    borderWidth: 1, borderColor: '#ECECEC', marginBottom: 10,
   },
-  reviewIcon: {
-    width: 38, height: 38, borderRadius: 10, backgroundColor: Colors.blue50,
+  reviewIconBox: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: '#FFF4ED', borderWidth: 1.5, borderColor: '#FFD4B3',
     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
-  reviewLabel: { fontSize: 11, fontWeight: FontWeight.bold, color: Colors.slate400, textTransform: 'uppercase', letterSpacing: 0.8 },
-  reviewValue: { fontSize: FontSize.base, color: Colors.darkNavy, marginTop: 2, lineHeight: 20 },
-  btnRow: { flexDirection: 'row', gap: 12 },
+  reviewLabel: { fontSize: 10, fontWeight: '700', color: '#AAAAAA', textTransform: 'uppercase', letterSpacing: 0.6 },
+  reviewValue: { fontSize: 13, color: '#0D0D0D', marginTop: 3, lineHeight: 18 },
+
+  // ── Buttons ───────────────────────────────────────────
+  btnRow: { flexDirection: 'row', gap: 10, marginTop: 8 },
   prevBtn: {
-    height: 52, borderRadius: BorderRadius.md, borderWidth: 1.5, borderColor: Colors.border,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
-    paddingHorizontal: 20,
+    height: 50, borderRadius: 14, borderWidth: 1.5, borderColor: '#ECECEC',
+    backgroundColor: '#FFFFFF', flexDirection: 'row',
+    alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 18,
   },
-  prevBtnText: { fontSize: FontSize.base, color: Colors.slate500, fontWeight: FontWeight.semibold },
+  prevBtnText: { fontSize: 13, color: '#555', fontWeight: '600' },
   nextBtn: {
-    flex: 1, height: 52, backgroundColor: Colors.primary, borderRadius: BorderRadius.md,
+    flex: 1, height: 50, backgroundColor: '#FF6B00', borderRadius: 14,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
   },
-  nextBtnText: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.white },
+  nextBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+
+  // ── Success modal ─────────────────────────────────────
   successOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.55)',
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center', justifyContent: 'center', padding: 24,
   },
   successCard: {
-    backgroundColor: Colors.white, borderRadius: 24, padding: 28, alignItems: 'center', width: '100%',
+    backgroundColor: '#FFFFFF', borderRadius: 22, padding: 28,
+    alignItems: 'center', width: '100%',
   },
-  successIconBg: {
-    width: 96, height: 96, borderRadius: 48,
-    backgroundColor: Colors.completedBg, alignItems: 'center', justifyContent: 'center', marginBottom: 20,
+  successIconBox: {
+    width: 88, height: 88, borderRadius: 44,
+    backgroundColor: '#F0FDF4', borderWidth: 2, borderColor: '#BBF7D0',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 18,
   },
-  successTitle: { fontSize: FontSize.xxl, fontWeight: FontWeight.extrabold, color: Colors.darkNavy, textAlign: 'center', marginBottom: 10 },
-  successBody: { fontSize: FontSize.lg, color: Colors.slate500, textAlign: 'center', lineHeight: 24, marginBottom: 24 },
+  successTitle: { fontSize: 20, fontWeight: '800', color: '#0D0D0D', textAlign: 'center', marginBottom: 8, letterSpacing: -0.4 },
+  successBody: { fontSize: 13, color: '#888', textAlign: 'center', lineHeight: 20, marginBottom: 22 },
   successBtn: {
-    width: '100%', height: 52, backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.md, alignItems: 'center', justifyContent: 'center',
+    width: '100%', height: 50, backgroundColor: '#FF6B00',
+    borderRadius: 14, alignItems: 'center', justifyContent: 'center',
   },
-  successBtnText: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.white },
+  successBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 });

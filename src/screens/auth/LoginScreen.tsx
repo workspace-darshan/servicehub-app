@@ -35,7 +35,7 @@ export const LoginScreen = ({ navigation }: any) => {
           <View style={styles.logoIconBg}>
             <Ionicons name="flash" size={28} color={Colors.primary} />
           </View>
-          <Text style={styles.logoText}>ServiceHub</Text>
+          <Text style={styles.logoText}></Text>
         </View>
 
         <Text style={styles.heading}>Welcome Back</Text>
@@ -150,12 +150,13 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
     borderWidth: 1.5, borderColor: Colors.border, borderRadius: BorderRadius.md,
-    backgroundColor: Colors.white, paddingHorizontal: 14, height: 52,
+    backgroundColor: Colors.white, paddingHorizontal: 14, height: 48,
   },
   inputIcon: { marginRight: 10 },
   bareInput: {
     flex: 1, fontSize: FontSize.base, color: Colors.darkNavy,
-    borderWidth: 0, height: 52, padding: 0, backgroundColor: 'transparent',
+    borderWidth: 0, height: 48, padding: 0, backgroundColor: 'transparent',
+    outlineStyle: 'none',
   },
   eyeBtn: { padding: 4 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -169,7 +170,7 @@ const styles = StyleSheet.create({
   rememberText: { fontSize: FontSize.md, color: Colors.slate500 },
   forgotText: { fontSize: FontSize.md, color: Colors.primary, fontWeight: FontWeight.semibold },
   primaryBtn: {
-    height: 54, backgroundColor: Colors.primary, borderRadius: BorderRadius.md,
+    height: 48, backgroundColor: Colors.primary, borderRadius: BorderRadius.md,
     alignItems: 'center', justifyContent: 'center',
   },
   primaryBtnText: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.3 },
@@ -177,7 +178,7 @@ const styles = StyleSheet.create({
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
   dividerText: { fontSize: FontSize.sm, color: Colors.slate400, fontWeight: FontWeight.medium },
   googleBtn: {
-    height: 52, borderRadius: BorderRadius.md, borderWidth: 1.5, borderColor: Colors.border,
+    height: 48, borderRadius: BorderRadius.md, borderWidth: 1.5, borderColor: Colors.border,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
   },
   googleText: { fontSize: FontSize.lg, color: Colors.darkNavy, fontWeight: FontWeight.semibold },

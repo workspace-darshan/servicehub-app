@@ -1,97 +1,123 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  TextInput, useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, FontSize, FontWeight, BorderRadius, Shadows } from '../../constants/theme';
+import { TopBar } from '../../components/TopBar';
 
 const SUBJECTS = ['General', 'Provider Issue', 'Technical', 'Billing', 'Other'];
+
+const CONTACT_ITEMS = [
+  { icon: 'call-outline', label: 'Phone', value: '(+91) 0192-181272', tappable: true },
+  { icon: 'mail-outline', label: 'Email', value: 'hello@sevek.in', tappable: true },
+  { icon: 'location-outline', label: 'Address', value: 'Palanpur, Banaskantha, Gujarat 385001', tappable: false },
+];
 
 export const ContactScreen = ({ navigation }: any) => {
   const [subject, setSubject] = useState('General');
   const [message, setMessage] = useState('');
   const [sent, setSent] = useState(false);
+  const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { height }]}>
       <StatusBar style="dark" />
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={Colors.darkNavy} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Contact Us</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <TopBar title="Contact Us" onBack={() => navigation.goBack()} />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {/* Contact links */}
-        <View style={styles.card}>
-          {[
-            { icon: 'call-outline', label: 'Phone', value: '(+91) 0192-181272', tappable: true },
-            { icon: 'mail-outline', label: 'Email', value: 'hello@servicehub.in', tappable: true },
-            { icon: 'location-outline', label: 'Address', value: 'Palanpur, Banaskantha, Gujarat 385001', tappable: false },
-          ].map((c, i, arr) => (
-            <TouchableOpacity
-              key={c.label}
-              style={[styles.contactRow, i === arr.length - 1 && { borderBottomWidth: 0 }]}
-              disabled={!c.tappable}>
-              <View style={styles.contactIcon}>
-                <Ionicons name={c.icon as any} size={18} color={Colors.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.contactLabel}>{c.label}</Text>
-                <Text style={[styles.contactValue, c.tappable && { color: Colors.primary }]}>{c.value}</Text>
-              </View>
-              {c.tappable && <Ionicons name="chevron-forward" size={15} color={Colors.slate300} />}
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Form */}
-        <View style={styles.card}>
-          <Text style={styles.formTitle}>Send a Message</Text>
-
-          {/* Subject chips */}
-          <Text style={styles.fieldLabel}>SUBJECT</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 16 }}>
-            {SUBJECTS.map(s => (
-              <TouchableOpacity
-                key={s}
-                style={[styles.subjectChip, subject === s && styles.subjectChipActive]}
-                onPress={() => setSubject(s)}>
-                <Text style={[styles.subjectChipText, subject === s && { color: Colors.primary, fontWeight: FontWeight.bold }]}>
-                  {s}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          <Text style={styles.fieldLabel}>MESSAGE</Text>
-          <TextInput
-            style={styles.textarea}
-            placeholder="Describe your query or issue..."
-            placeholderTextColor={Colors.slate400}
-            multiline
-            numberOfLines={5}
-            value={message}
-            onChangeText={setMessage}
-            textAlignVertical="top"
-          />
-
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 40 }]}
+        keyboardShouldPersistTaps="handled"
+        bounces={true}
+      >
+        {/* Contact Info Cards */}
+        <Text style={styles.sectionHeading}>Get In Touch</Text>
+        {CONTACT_ITEMS.map((c, i) => (
           <TouchableOpacity
-            style={[styles.sendBtn, sent && { backgroundColor: Colors.successGreen }]}
-            onPress={() => setSent(true)}
-            disabled={sent}>
-            <Ionicons name={sent ? 'checkmark-circle' : 'send-outline'} size={18} color={Colors.white} />
-            <Text style={styles.sendBtnText}>{sent ? 'Message Sent!' : 'Send Message'}</Text>
+            key={c.label}
+            style={styles.contactCard}
+            disabled={!c.tappable}
+            activeOpacity={c.tappable ? 0.7 : 1}
+          >
+            <View style={styles.contactIconBox}>
+              <Ionicons name={c.icon as any} size={18} color="#FF6B00" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.contactLabel}>{c.label}</Text>
+              <Text style={[styles.contactValue, c.tappable && { color: '#FF6B00' }]}>
+                {c.value}
+              </Text>
+            </View>
+            {c.tappable && (
+              <Ionicons name="chevron-forward" size={15} color="#C8C8C8" />
+            )}
           </TouchableOpacity>
-        </View>
+        ))}
 
         {/* WhatsApp */}
-        <TouchableOpacity style={styles.whatsappBtn}>
-          <Ionicons name="logo-whatsapp" size={22} color={Colors.white} />
-          <Text style={styles.whatsappText}>Chat on WhatsApp</Text>
+        <TouchableOpacity style={styles.whatsappCard} activeOpacity={0.8}>
+          <View style={styles.whatsappIconBox}>
+            <Ionicons name="logo-whatsapp" size={20} color="#22C55E" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.contactLabel}>WhatsApp</Text>
+            <Text style={[styles.contactValue, { color: '#22C55E' }]}>Chat with us instantly</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={15} color="#C8C8C8" />
+        </TouchableOpacity>
+
+        {/* Message Form */}
+        <Text style={[styles.sectionHeading, { marginTop: 8 }]}>Send a Message</Text>
+
+        {/* Subject chips */}
+        <Text style={styles.fieldLabel}>SUBJECT</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsRow}
+        >
+          {SUBJECTS.map(s => (
+            <TouchableOpacity
+              key={s}
+              style={[styles.chip, subject === s && styles.chipActive]}
+              onPress={() => setSubject(s)}
+            >
+              <Text style={[styles.chipText, subject === s && styles.chipTextActive]}>{s}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Message input */}
+        <Text style={styles.fieldLabel}>MESSAGE</Text>
+        <TextInput
+          style={styles.textarea}
+          placeholder="Describe your query or issue..."
+          placeholderTextColor="#AAAAAA"
+          multiline
+          numberOfLines={5}
+          value={message}
+          onChangeText={setMessage}
+          textAlignVertical="top"
+        />
+
+        {/* Send Button */}
+        <TouchableOpacity
+          style={[styles.sendBtn, sent && styles.sendBtnSuccess]}
+          onPress={() => { setSent(true); }}
+          disabled={sent}
+          activeOpacity={0.85}
+        >
+          <Ionicons
+            name={sent ? 'checkmark-circle' : 'send-outline'}
+            size={18}
+            color="#fff"
+          />
+          <Text style={styles.sendBtnText}>{sent ? 'Message Sent!' : 'Send Message'}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -99,50 +125,69 @@ export const ContactScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingTop: 52, paddingBottom: 14,
-    backgroundColor: Colors.white, borderBottomWidth: 1, borderBottomColor: Colors.border,
+  container: { backgroundColor: '#F5F4F0', overflow: 'hidden' },
+  scrollView: { flex: 1 },
+  scroll: { padding: 18, gap: 10 },
+
+  sectionHeading: {
+    fontSize: 17, fontWeight: '700', color: '#0D0D0D',
+    marginBottom: 4, marginTop: 4, letterSpacing: -0.3,
   },
-  backBtn: { width: 40, height: 40, justifyContent: 'center' },
-  headerTitle: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.darkNavy },
-  scroll: { padding: 20, gap: 16, paddingBottom: 60 },
-  card: { backgroundColor: Colors.white, borderRadius: 16, padding: 16, ...Shadows.card },
-  contactRow: {
+
+  // Contact cards
+  contactCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.border,
+    backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14,
+    borderWidth: 1, borderColor: '#ECECEC',
   },
-  contactIcon: {
-    width: 40, height: 40, borderRadius: 12,
-    backgroundColor: Colors.blue50, alignItems: 'center', justifyContent: 'center',
+  contactIconBox: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#FFF4ED', borderWidth: 2, borderColor: '#FFD4B3',
+    alignItems: 'center', justifyContent: 'center',
   },
-  contactLabel: { fontSize: FontSize.xs, color: Colors.slate400, fontWeight: FontWeight.bold, textTransform: 'uppercase', letterSpacing: 0.5 },
-  contactValue: { fontSize: FontSize.base, color: Colors.darkNavy, marginTop: 2, fontWeight: FontWeight.medium },
-  formTitle: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.darkNavy, marginBottom: 14 },
+  whatsappCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14,
+    borderWidth: 1, borderColor: '#ECECEC',
+  },
+  whatsappIconBox: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#F0FDF4', borderWidth: 2, borderColor: '#BBF7D0',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  contactLabel: {
+    fontSize: 10, fontWeight: '700', color: '#AAAAAA',
+    textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 2,
+  },
+  contactValue: {
+    fontSize: 13, fontWeight: '600', color: '#0D0D0D',
+  },
+
+  // Form
   fieldLabel: {
-    fontSize: 10, fontWeight: FontWeight.bold, color: Colors.slate400,
-    textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8,
+    fontSize: 10, fontWeight: '700', color: '#AAAAAA',
+    textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, marginTop: 4,
   },
-  subjectChip: {
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: BorderRadius.full,
-    backgroundColor: Colors.surfaceContainerLow, borderWidth: 1.5, borderColor: Colors.border,
+  chipsRow: { flexDirection: 'row', gap: 8, paddingBottom: 14 },
+  chip: {
+    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 99,
+    backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: '#ECECEC',
   },
-  subjectChipActive: { borderColor: Colors.primary, backgroundColor: Colors.blue50 },
-  subjectChipText: { fontSize: FontSize.sm, color: Colors.slate500 },
+  chipActive: { borderColor: '#FF6B00', backgroundColor: '#FFF4ED' },
+  chipText: { fontSize: 12, color: '#888', fontWeight: '500' },
+  chipTextActive: { color: '#FF6B00', fontWeight: '700' },
+
   textarea: {
-    height: 120, borderWidth: 1.5, borderColor: Colors.border, borderRadius: BorderRadius.md,
-    paddingHorizontal: 14, paddingTop: 12, fontSize: FontSize.base, color: Colors.darkNavy,
-    marginBottom: 16,
-  },
+    height: 120, borderWidth: 1.5, borderColor: '#ECECEC',
+    borderRadius: 14, paddingHorizontal: 14, paddingTop: 12,
+    fontSize: 13, color: '#0D0D0D', backgroundColor: '#FFFFFF',
+    marginBottom: 4,
+    outlineWidth: 0, outlineStyle: 'none',
+  } as any,
   sendBtn: {
-    height: 52, backgroundColor: Colors.primary, borderRadius: BorderRadius.md,
+    height: 50, backgroundColor: '#FF6B00', borderRadius: 14,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
   },
-  sendBtnText: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.white },
-  whatsappBtn: {
-    height: 54, backgroundColor: '#22C55E', borderRadius: BorderRadius.md,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-  },
-  whatsappText: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.white },
+  sendBtnSuccess: { backgroundColor: '#22C55E' },
+  sendBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 });

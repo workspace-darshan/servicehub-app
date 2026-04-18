@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, FontSize, FontWeight, Shadows } from '../constants/theme';
 
 // Auth
@@ -18,7 +19,7 @@ import { AllServicesScreen } from '../screens/customer/AllServicesScreen';
 import { ProviderListingScreen } from '../screens/customer/ProviderListingScreen';
 import { ProviderProfileScreen } from '../screens/customer/ProviderProfileScreen';
 import { SendEnquiryScreen } from '../screens/customer/SendEnquiryScreen';
-import { MyActivityScreen } from '../screens/customer/MyActivityScreen';
+import { SavedProvidersScreen } from '../screens/customer/SavedProvidersScreen';
 import { ProfileScreen } from '../screens/customer/ProfileScreen';
 import { SearchScreen } from '../screens/customer/SearchScreen';
 import { EditProfileScreen } from '../screens/customer/EditProfileScreen';
@@ -50,15 +51,17 @@ const CUSTOMER_TABS: CustomerTabConfig[] = [
   { name: 'Home', label: 'Home', icon: 'home', component: HomeScreen },
   { name: 'AllServices', label: 'Services', icon: 'grid', component: AllServicesScreen },
   { name: 'Providers', label: 'Providers', icon: 'people', component: ProviderListingScreen },
-  { name: 'Activity', label: 'Activity', icon: 'time', component: MyActivityScreen },
+  { name: 'Saved', label: 'Saved', icon: 'bookmark', component: SavedProvidersScreen },
   { name: 'Profile', label: 'Profile', icon: 'person', component: ProfileScreen },
 ];
 
 const CustomerTab = createBottomTabNavigator();
 
 function CustomerTabBar({ state, descriptors, navigation }: any) {
+  const insets = useSafeAreaInsets();
+  
   return (
-    <View style={tabStyles.bar}>
+    <View style={[tabStyles.bar, { paddingBottom: insets.bottom, height: 68 + insets.bottom }]}>
       {state.routes.map((route: any, index: number) => {
         const isActive = state.index === index;
         const tab = CUSTOMER_TABS[index];
@@ -115,8 +118,10 @@ const PROVIDER_TABS: ProviderTabConfig[] = [
 const ProviderTab = createBottomTabNavigator();
 
 function ProviderTabBar({ state, descriptors, navigation }: any) {
+  const insets = useSafeAreaInsets();
+  
   return (
-    <View style={tabStyles.bar}>
+    <View style={[tabStyles.bar, { paddingBottom: insets.bottom, height: 68 + insets.bottom }]}>
       {state.routes.map((route: any, index: number) => {
         const isActive = state.index === index;
         const tab = PROVIDER_TABS[index];

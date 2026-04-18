@@ -105,7 +105,7 @@ export const SplashScreen = ({ navigation }: any) => {
             transform: [{ translateY: logoTranslateY }],
             alignItems: 'center',
           }}>
-          <Text style={styles.logo}>ServiceHub</Text>
+          <Text style={styles.logo}>Sevek</Text>
         </Animated.View>
 
         {/* Subtitle */}
@@ -129,7 +129,7 @@ export const SplashScreen = ({ navigation }: any) => {
 
       {/* Version */}
       <View style={styles.footer}>
-        <Text style={styles.version}>v1.0.0 · ServiceHub Technologies © 2024</Text>
+        <Text style={styles.version}>v1.0.0 · Sevek Technologies © 2024</Text>
       </View>
     </LinearGradient>
   );

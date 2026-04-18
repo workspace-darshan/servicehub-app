@@ -44,7 +44,7 @@ export const RegisterScreen = ({ navigation }: any) => {
 
         <View style={styles.titleArea}>
           <Text style={styles.heading}>Create Account</Text>
-          <Text style={styles.subheading}>Join ServiceHub free</Text>
+          <Text style={styles.subheading}>Join Sevek free</Text>
         </View>
 
         {/* Name Row */}
@@ -137,25 +137,44 @@ export const RegisterScreen = ({ navigation }: any) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.white },
-  scroll: { paddingHorizontal: 24, paddingTop: 52, paddingBottom: 48 },
-  backBtn: { width: 40, height: 40, justifyContent: 'center', marginBottom: 16 },
-  titleArea: { marginBottom: 28 },
-  heading: { fontSize: FontSize.h1, fontWeight: FontWeight.extrabold, color: Colors.darkNavy },
-  subheading: { fontSize: FontSize.lg, color: Colors.slate400, marginTop: 6 },
+  scroll: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 48 },
+  backBtn: { 
+    width: 40, 
+    height: 40, 
+    justifyContent: 'center', 
+    marginBottom: 10,
+    marginLeft: -0,
+  },
+  titleArea: { marginBottom: 32 },
+  heading: { 
+    fontSize: 24, 
+    fontWeight: FontWeight.bold, 
+    color: Colors.darkNavy,
+    marginBottom: 4,
+  },
+  subheading: { 
+    fontSize: FontSize.base, 
+    color: Colors.slate500, 
+    marginTop: 2,
+  },
   nameRow: { flexDirection: 'row', gap: 12 },
   fieldWrapper: { marginBottom: 16 },
   fieldLabel: {
-    fontSize: 11, fontWeight: FontWeight.bold, color: Colors.slate400,
-    textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8,
+    fontSize: 10, 
+    fontWeight: FontWeight.bold, 
+    color: Colors.slate500,
+    textTransform: 'uppercase', 
+    letterSpacing: 1, 
+    marginBottom: 8,
   },
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
     borderWidth: 1.5, borderColor: Colors.border, borderRadius: BorderRadius.md,
-    backgroundColor: Colors.white, paddingHorizontal: 14, height: 52,
+    backgroundColor: Colors.white, paddingHorizontal: 14, height: 48,
   },
   bareInput: {
     flex: 1, fontSize: FontSize.base, color: Colors.darkNavy,
-    borderWidth: 0, height: 52, padding: 0, backgroundColor: 'transparent',
+    borderWidth: 0, height: 48, padding: 0, backgroundColor: 'transparent',
   },
   countryCode: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingRight: 10 },
   countryCodeText: { fontSize: FontSize.base, fontWeight: FontWeight.semibold, color: Colors.darkNavy },
@@ -175,7 +194,7 @@ const styles = StyleSheet.create({
   termsText: { flex: 1, fontSize: FontSize.md, color: Colors.slate500, lineHeight: 20 },
   termsLink: { color: Colors.primary, fontWeight: FontWeight.semibold },
   primaryBtn: {
-    height: 54, backgroundColor: Colors.primary, borderRadius: BorderRadius.md,
+    height: 48, backgroundColor: Colors.primary, borderRadius: BorderRadius.md,
     alignItems: 'center', justifyContent: 'center',
   },
   primaryBtnText: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.3 },
