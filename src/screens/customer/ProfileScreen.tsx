@@ -5,6 +5,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ACCOUNT_ROWS = [
   { icon: 'person-outline', label: 'Edit Profile', screen: 'EditProfile' },
@@ -22,6 +23,8 @@ const GENERAL_ROWS = [
 ];
 
 export const ProfileScreen = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
+
   const renderRow = (item: any, index: number, arr: any[]) => (
     <TouchableOpacity
       key={item.label}
@@ -45,7 +48,7 @@ export const ProfileScreen = ({ navigation }: any) => {
         <LinearGradient
           colors={['#FF6B00', '#FF9A3C'] as [string, string, ...string[]]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-          style={styles.header}>
+          style={[styles.header, { paddingTop: 12 + insets.top }]}>
           <View style={styles.topBar}>
             <Text style={styles.headerTitle}>Profile</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.settingsBtn}>

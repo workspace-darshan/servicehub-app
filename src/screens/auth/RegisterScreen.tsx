@@ -7,12 +7,14 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/ui';
 import { Colors, FontSize, FontWeight, BorderRadius } from '../../constants/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Simple register — customer only
 export const RegisterScreen = ({ navigation }: any) => {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const handleRegister = () => {
     setLoading(true);
@@ -38,7 +40,7 @@ export const RegisterScreen = ({ navigation }: any) => {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={[styles.backBtn, { paddingTop: 10 + insets.top }]} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={Colors.darkNavy} />
         </TouchableOpacity>
 

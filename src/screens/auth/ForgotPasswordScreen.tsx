@@ -5,11 +5,13 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius } from '../../constants/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const ForgotPasswordScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const handleSubmit = () => {
     if (!email.trim()) return;
@@ -23,7 +25,7 @@ export const ForgotPasswordScreen = ({ navigation }: any) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <StatusBar style="dark" />
 
-      <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+      <TouchableOpacity style={[styles.backBtn, { paddingTop: 10 + insets.top }]} onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-back" size={22} color={Colors.darkNavy} />
       </TouchableOpacity>
 
@@ -112,7 +114,7 @@ const styles = StyleSheet.create({
     width: '100%', height: 48, borderWidth: 1.5, borderColor: Colors.border,
     borderRadius: BorderRadius.md, paddingHorizontal: 14, backgroundColor: Colors.white,
   },
-  bareInput: { flex: 1, fontSize: FontSize.base, color: Colors.darkNavy, borderWidth: 0, padding: 0, height: 48, backgroundColor: 'transparent', outlineStyle: 'none' },
+  bareInput: { flex: 1, fontSize: FontSize.base, color: Colors.darkNavy, borderWidth: 0, padding: 0, height: 48, backgroundColor: 'transparent' },
   submitBtn: {
     width: '100%', height: 48, backgroundColor: Colors.primary, borderRadius: BorderRadius.md,
     alignItems: 'center', justifyContent: 'center',

@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Shadows } from '../../constants/theme';
 import { NOTIFICATIONS } from '../../data/mockData';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -17,10 +18,12 @@ const TYPE_CFG: Record<string, { icon: IoniconName; color: string; bg: string }>
 };
 
 export const NotificationsScreen = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: 14 + insets.top }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.darkNavy} />
         </TouchableOpacity>

@@ -5,11 +5,13 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Shadows } from '../../constants/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const OFFERED_SERVICES = ['Plumbing', 'Bathroom Fitting', 'Pipe Installation', 'Leak Repair', 'Drainage Cleaning'];
 
 export const ProviderEditProfileScreen = ({ navigation }: any) => {
   const [loading, setLoading] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const handleSave = () => {
     setLoading(true);
@@ -29,7 +31,7 @@ export const ProviderEditProfileScreen = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: 14 + insets.top }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.darkNavy} />
         </TouchableOpacity>

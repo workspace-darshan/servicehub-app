@@ -5,6 +5,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Shadows } from '../../constants/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ENQUIRIES = [
   {
@@ -39,6 +40,7 @@ const TABS = ['New', 'Replied', 'All'];
 
 export const ProviderEnquiriesScreen = ({ navigation }: any) => {
   const [activeTab, setActiveTab] = useState('All');
+  const insets = useSafeAreaInsets();
 
   const filtered = ENQUIRIES.filter(e => {
     if (activeTab === 'New') return e.status === 'New';
@@ -107,7 +109,7 @@ export const ProviderEnquiriesScreen = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: 14 + insets.top }]}>
         <Text style={styles.headerTitle}>Enquiries</Text>
         {newCount > 0 && (
           <View style={styles.newCountBadge}>

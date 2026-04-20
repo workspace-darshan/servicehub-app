@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface TopBarProps {
   title: string;
@@ -17,8 +18,10 @@ export const TopBar: React.FC<TopBarProps> = ({
   rightIcon,
   onRightPress,
 }) => {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: 14 + insets.top }]}>
       {onBack && (
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
           <Ionicons name="arrow-back" size={22} color="#0D0D0D" />

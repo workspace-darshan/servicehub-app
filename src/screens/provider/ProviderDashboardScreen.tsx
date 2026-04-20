@@ -5,6 +5,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Shadows } from '../../constants/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const STATS = [
   { icon: 'mail-open-outline', iconColor: Colors.primary, value: '5', label: 'New Enquiries', sub: 'This week' },
@@ -26,12 +27,14 @@ const QUICK_ACTIONS = [
 ];
 
 export const ProviderDashboardScreen = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: 14 + insets.top }]}>
         <View>
           <Text style={styles.headerTitle}>Provider Hub</Text>
           <Text style={styles.headerSub}>GOOD MORNING</Text>

@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SERVICES } from '../../data/mockData';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -107,6 +108,7 @@ export const HomeScreen = ({ navigation }: any) => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const bannerScrollRef = useRef<ScrollView>(null);
+  const insets = useSafeAreaInsets();
 
   // Auto-scroll banners every 3 seconds
   useEffect(() => {
@@ -136,7 +138,7 @@ export const HomeScreen = ({ navigation }: any) => {
       <StatusBar style="dark" />
 
       {/* Sticky Header with Blur */}
-      <BlurView intensity={80} tint="light" style={styles.header}>
+      <BlurView intensity={80} tint="light" style={[styles.header, { paddingTop: 10 + insets.top }]}>
         {/* Top Row */}
         <View style={styles.headerTop}>
           <View>

@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/ui';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius } from '../../constants/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ export const LoginScreen = ({ navigation }: any) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const handleLogin = () => {
     setLoading(true);
@@ -28,7 +30,7 @@ export const LoginScreen = ({ navigation }: any) => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: 60 + insets.top }]} showsVerticalScrollIndicator={false}>
 
         {/* Logo */}
         <View style={styles.logoArea}>
@@ -156,7 +158,6 @@ const styles = StyleSheet.create({
   bareInput: {
     flex: 1, fontSize: FontSize.base, color: Colors.darkNavy,
     borderWidth: 0, height: 48, padding: 0, backgroundColor: 'transparent',
-    outlineStyle: 'none',
   },
   eyeBtn: { padding: 4 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

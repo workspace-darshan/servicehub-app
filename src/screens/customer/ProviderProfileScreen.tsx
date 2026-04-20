@@ -47,7 +47,7 @@ export const ProviderProfileScreen = ({ navigation, route }: any) => {
       <LinearGradient
         colors={['#1D4ED8', '#0F172A']}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-        style={styles.hero}>
+        style={[styles.hero, { paddingTop: 12 + insets.top }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
         </TouchableOpacity>

@@ -5,6 +5,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius } from '../../constants/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const RECENT = ['Plumber', 'AC Repair', 'Electrician'];
 const POPULAR = [
@@ -28,12 +29,13 @@ const PROVIDER_RESULTS = [
 export const SearchScreen = ({ navigation }: any) => {
   const [query, setQuery] = useState('');
   const hasQuery = query.trim().length > 0;
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
       {/* Search bar header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: 14 + insets.top }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.darkNavy} />
         </TouchableOpacity>
@@ -148,7 +150,7 @@ const styles = StyleSheet.create({
     height: 48, backgroundColor: Colors.white, borderRadius: BorderRadius.md,
     paddingHorizontal: 14, borderWidth: 1.5, borderColor: Colors.border,
   },
-  searchInput: { flex: 1, fontSize: FontSize.base, color: Colors.darkNavy, height: 48, padding: 0, outlineStyle: 'none' },
+  searchInput: { flex: 1, fontSize: FontSize.base, color: Colors.darkNavy, height: 48, padding: 0 },
   scroll: { padding: 20, paddingBottom: 60 },
   sectionLabel: {
     fontSize: 10, fontWeight: FontWeight.bold, color: Colors.slate400,
