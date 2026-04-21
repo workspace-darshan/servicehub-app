@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0F172A",
+        "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/adaptive-icon.png"
       },
       "package": "com.servicehub.app",

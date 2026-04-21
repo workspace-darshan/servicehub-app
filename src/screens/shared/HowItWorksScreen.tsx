@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { TopBar } from '../../components/TopBar';
@@ -38,11 +37,9 @@ export const HowItWorksScreen = ({ navigation }: any) => {
   const [tab, setTab] = useState<TabKey>('customer');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const steps = tab === 'customer' ? HOW_IT_WORKS_CUSTOMER : HOW_IT_WORKS_PROVIDER;
-  const { height } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.container, { height }]}>
+    <View style={styles.container}>
       <StatusBar style="dark" />
       <TopBar
         title="How It Works"

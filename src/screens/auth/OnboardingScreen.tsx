@@ -1,53 +1,48 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-  Animated,
+  View, Text, StyleSheet, TouchableOpacity, Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, BorderRadius, FontSize, FontWeight } from '../../constants/theme';
+import { Colors, FontSize, FontWeight, BorderRadius } from '../../constants/theme';
 
-const { width, height } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 const SLIDES = [
   {
     id: 1,
-    title: 'Find Trusted Professionals',
-    body: 'Connect with verified plumbers, electricians, carpenters, and 15+ more service types near you in Palanpur and across Gujarat.',
-    icon: 'construct-outline' as const,
-    badgeIcon: 'shield-checkmark-outline' as const,
-    badgeText: 'Verified Professionals',
-    bg: ['#EFF6FF', '#DBEAFE'] as [string, string],
-    accent: Colors.primary,
+    title: 'Find Trusted Service Providers',
+    body: 'Browse verified professionals for all your home service needs.',
+    bg: ['#FF6B00', '#FF9A3C'],
+    accent: '#FF6B00',
+    badgeIcon: 'shield-checkmark',
+    badgeText: 'Verified Pros',
   },
   {
     id: 2,
-    title: 'Compare & Choose the Best',
-    body: 'Browse provider profiles, check star ratings, read real reviews, and compare experience — all in one place.',
-    icon: 'star-outline' as const,
-    badgeIcon: 'star' as const,
-    badgeText: 'Rated Service Experts',
-    bg: ['#F0FDF4', '#DCFCE7'] as [string, string],
-    accent: Colors.successGreen,
+    title: 'Book Services Instantly',
+    body: 'Send enquiries and get quick responses from service providers.',
+    bg: ['#9333EA', '#A78BFA'],
+    accent: '#9333EA',
+    badgeIcon: 'flash',
+    badgeText: 'Fast Response',
   },
   {
     id: 3,
-    title: 'Service Done. Simple.',
-    body: 'Send enquiries, get connected, and rate providers after — making your home services stress-free.',
-    icon: 'paper-plane-outline' as const,
-    badgeIcon: 'flash-outline' as const,
-    badgeText: 'Quick & Easy Process',
-    bg: ['#FFF7ED', '#FFEDD5'] as [string, string],
-    accent: Colors.accentOrange,
+    title: 'Track & Review',
+    body: 'Manage your bookings and share feedback to help the community.',
+    bg: ['#16A34A', '#4ADE80'],
+    accent: '#16A34A',
+    badgeIcon: 'star',
+    badgeText: 'Top Rated',
   },
 ];
 
 export const OnboardingScreen = ({ navigation }: any) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const slide = SLIDES[currentSlide];
+  const isLast = currentSlide === SLIDES.length - 1;
 
   const handleNext = () => {
     if (currentSlide < SLIDES.length - 1) {
@@ -61,11 +56,10 @@ export const OnboardingScreen = ({ navigation }: any) => {
     }
   };
 
-  const isLast = currentSlide === SLIDES.length - 1;
-  const slide = SLIDES[currentSlide];
-
   return (
     <View style={styles.container}>
+      <StatusBar style="light" />
+      
       {/* Skip button */}
       <TouchableOpacity
         style={styles.skipBtn}
@@ -75,16 +69,16 @@ export const OnboardingScreen = ({ navigation }: any) => {
 
       {/* Illustration area */}
       <LinearGradient
-        colors={slide.bg}
+        colors={slide.bg as [string, string, ...string[]]}
         style={styles.illustrationArea}>
-        {/* Large centered Ionicon */}
-        <View style={[styles.illustrationIconBg, { backgroundColor: slide.accent + '18', borderColor: slide.accent + '30' }]}>
-          <Ionicons name={slide.icon} size={80} color={slide.accent} />
+        <View style={styles.illustrationIconBg}>
+          <Ionicons name="flash" size={80} color="#fff" />
         </View>
+        
         {/* Floating badge */}
         <View style={[styles.floatingBadge, { borderColor: slide.accent + '30' }]}>
-          <Ionicons name={slide.badgeIcon} size={13} color={slide.accent} />
-          <Text style={{ fontSize: 11, color: slide.accent, fontWeight: FontWeight.semibold }}>
+          <Ionicons name={slide.badgeIcon as any} size={13} color={slide.accent} />
+          <Text style={{ fontSize: 11, color: slide.accent, fontWeight: '600' }}>
             {slide.badgeText}
           </Text>
         </View>
@@ -150,8 +144,8 @@ export const OnboardingScreen = ({ navigation }: any) => {
   );
 };
 
-const CONTENT_HEIGHT = height * 0.48;
-const ILLUS_HEIGHT = height * 0.52;
+const CONTENT_HEIGHT = height * 0.42;
+const ILLUS_HEIGHT = height * 0.58;
 
 const styles = StyleSheet.create({
   container: {
@@ -169,9 +163,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   skipText: {
-    fontSize: FontSize.base,
-    color: Colors.slate500,
-    fontWeight: FontWeight.medium,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '600',
   },
   illustrationArea: {
     height: ILLUS_HEIGHT,
@@ -181,7 +175,9 @@ const styles = StyleSheet.create({
   illustrationIconBg: {
     width: 160, height: 160, borderRadius: 80,
     alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   floatingBadge: {
     position: 'absolute',
@@ -190,7 +186,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: BorderRadius.full,
+    borderRadius: 20,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -203,12 +199,12 @@ const styles = StyleSheet.create({
   },
   contentCard: {
     backgroundColor: Colors.white,
-    marginTop: -28,
+    marginTop: 0,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 28,
     paddingTop: 32,
-    paddingBottom: 40,
+    paddingBottom: 20,
     minHeight: CONTENT_HEIGHT,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
@@ -233,14 +229,15 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.slate300,
   },
   heading: {
-    fontSize: FontSize.h1,
-    fontWeight: FontWeight.extrabold,
+    fontSize: 26,
+    fontWeight: '800',
     color: Colors.darkNavy,
     lineHeight: 32,
     marginBottom: 12,
+    letterSpacing: -0.5,
   },
   body: {
-    fontSize: FontSize.base,
+    fontSize: 14,
     color: Colors.slate500,
     lineHeight: 22,
     marginBottom: 32,
@@ -250,26 +247,26 @@ const styles = StyleSheet.create({
   },
   primaryBtn: {
     height: 48,
-    borderRadius: BorderRadius.lg,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   primaryBtnText: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
+    fontSize: 15,
+    fontWeight: '700',
     color: Colors.white,
   },
   secondaryBtn: {
     height: 48,
-    borderRadius: BorderRadius.lg,
+    borderRadius: 14,
     borderWidth: 1.5,
     borderColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   secondaryBtnText: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
+    fontSize: 15,
+    fontWeight: '700',
     color: Colors.primary,
   },
   navRow: {
@@ -279,26 +276,26 @@ const styles = StyleSheet.create({
   backBtn: {
     flex: 0.4,
     height: 48,
-    borderRadius: BorderRadius.lg,
+    borderRadius: 14,
     borderWidth: 1.5,
     borderColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   backBtnText: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
+    fontSize: 15,
+    fontWeight: '600',
     color: Colors.slate500,
   },
   nextBtn: {
     height: 48,
-    borderRadius: BorderRadius.lg,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   nextBtnText: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
+    fontSize: 15,
+    fontWeight: '700',
     color: Colors.white,
   },
   stepLabel: {
@@ -308,6 +305,6 @@ const styles = StyleSheet.create({
     color: Colors.slate400,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
-    fontWeight: FontWeight.bold,
+    fontWeight: '700',
   },
 });

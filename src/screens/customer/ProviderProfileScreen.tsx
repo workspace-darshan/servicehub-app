@@ -1,310 +1,578 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const TABS = ['About', 'Services', 'Reviews'];
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const TABS = ['About me', 'Photos & Videos', 'Reviews'];
 
 const MOCK_REVIEWS = [
-  { id: '1', name: 'Amit Sharma', rating: 5, date: 'Mar 2026', comment: 'Excellent work! Fixed the leak quickly and professionally.' },
-  { id: '2', name: 'Priya Mehta', rating: 4, date: 'Feb 2026', comment: 'Good service, arrived on time. Would recommend.' },
-  { id: '3', name: 'Vikram Joshi', rating: 5, date: 'Jan 2026', comment: 'Very skilled and trustworthy. My go-to plumber.' },
+  { 
+    id: '1', 
+    name: 'Laurellee Quintana', 
+    rating: 4.5, 
+    date: '3 weeks ago', 
+    comment: 'Absolutely! This is what I was looking for. I recommend to everyone!',
+    likes: 25,
+    avatar: 'LQ'
+  },
+  { 
+    id: '2', 
+    name: 'Clinton McClure', 
+    rating: 4.3, 
+    date: '1 week ago', 
+    comment: 'I am very satisfied with the results. The results are very satisfying! I like it very much! 🔥🔥🔥',
+    likes: 10,
+    avatar: 'CM'
+  },
+  { 
+    id: '3', 
+    name: 'Chelsi Chubb', 
+    rating: 5, 
+    date: '1 week ago', 
+    comment: 'Thank you. The quality is excellent and the results were amazing! 😍😍',
+    likes: 8,
+    avatar: 'CC'
+  },
 ];
 
 const MOCK_SERVICES = [
-  'Pipe Installation & Repair', 'Leak Detection & Fix', 'Bathroom Fitting',
-  'Kitchen Plumbing', 'Drainage Cleaning', 'Water Tank Installation',
+  'Event Planning', 'Wedding decor', 'Hall Decor', 'Ushering', 'Corporate decor',
+];
+
+const MOCK_GALLERY = [
+  { id: '1', uri: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400' },
+  { id: '2', uri: 'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400' },
+  { id: '3', uri: 'https://images.unsplash.com/photo-1585421514738-01798e348b17?w=400' },
+  { id: '4', uri: 'https://images.unsplash.com/photo-1628177142898-93e36e4e3a50?w=400' },
+  { id: '5', uri: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400' },
+  { id: '6', uri: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400' },
+];
+
+const RATING_FILTERS = [
+  { label: 'All', value: 'all', icon: 'apps' },
+  { label: '5', value: '5', icon: 'star' },
+  { label: '4', value: '4', icon: 'star' },
+  { label: '3', value: '3', icon: 'star' },
+  { label: '2', value: '2', icon: 'star' },
+];
+
+const MOCK_FAQS = [
+  { q: 'What areas do you serve?', a: 'We serve all areas in Queens, NY and surrounding boroughs.' },
+  { q: 'Do you provide equipment?', a: 'Yes, we provide all necessary decoration equipment and materials.' },
+  { q: 'What is your cancellation policy?', a: 'Cancellations must be made 48 hours in advance for a full refund.' },
 ];
 
 const StarRow = ({ rating }: { rating: number }) => (
   <View style={{ flexDirection: 'row', gap: 2 }}>
     {[1, 2, 3, 4, 5].map(s => (
-      <Ionicons key={s} name={s <= rating ? 'star' : 'star-outline'} size={13} color="#FBBF24" />
+      <Ionicons 
+        key={s} 
+        name={s <= Math.floor(rating) ? 'star' : (s - rating < 1 && s - rating > 0) ? 'star-half' : 'star-outline'} 
+        size={11} 
+        color="#FFB800" 
+      />
     ))}
   </View>
 );
 
 export const ProviderProfileScreen = ({ navigation, route }: any) => {
   const provider = route?.params?.provider || {
-    name: 'Rajesh Kumar', service: 'Plumber',
-    city: 'Palanpur', rating: 4.9, reviews: 32, experience: 8, verified: true,
-    bio: 'Expert in residential and commercial plumbing. 8+ years of experience across Gujarat. Specializes in pipeline installation, leak repair, and bathroom fittings with guaranteed workmanship.',
+    name: 'Jenny Wilson',
+    service: 'House Cleaning',
+    city: '255 Grand Park Avenue, New York',
+    rating: 4.8,
+    reviews: 4479,
+    price: 20,
+    experience: 20,
+    verified: true,
+    bio: 'Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800',
   };
 
   const [activeTab, setActiveTab] = useState('About');
-  const initials = provider.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2);
+  const [selectedRatingFilter, setSelectedRatingFilter] = useState('all');
   const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Hero header */}
-      <LinearGradient
-        colors={['#1D4ED8', '#0F172A']}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-        style={[styles.hero, { paddingTop: 12 + insets.top }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
-
-        <View style={styles.heroContent}>
-          {/* Avatar */}
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
-          </View>
-          {provider.verified && (
-            <View style={styles.verifiedBadge}>
-              <Ionicons name="shield-checkmark" size={11} color="#DBEAFE" />
-              <Text style={styles.verifiedText}>Verified Pro</Text>
-            </View>
-          )}
-          <Text style={styles.heroName}>{provider.name}</Text>
-          <Text style={styles.heroService}>{provider.service}</Text>
-
-          {/* Stats row */}
-          <View style={styles.statsRow}>
-            {[
-              { icon: 'star', value: String(provider.rating), label: 'Rating', color: '#FBBF24' },
-              { icon: 'chatbubble', value: String(provider.reviews), label: 'Reviews', color: '#DBEAFE' },
-              { icon: 'time', value: `${provider.experience}yr`, label: 'Exp', color: '#86EFAC' },
-            ].map((stat, i) => (
-              <React.Fragment key={stat.label}>
-                {i > 0 && <View style={styles.statDivider} />}
-                <View style={styles.stat}>
-                  <Ionicons name={stat.icon as any} size={14} color={stat.color} />
-                  <Text style={styles.statValue}>{stat.value}</Text>
-                  <Text style={styles.statLabel}>{stat.label}</Text>
-                </View>
-              </React.Fragment>
-            ))}
-          </View>
-
-          {/* Action Buttons */}
-          <View style={styles.heroButtons}>
-            <TouchableOpacity style={styles.heroCallBtn}>
-              <Ionicons name="call-outline" size={20} color="#FFFFFF" />
-              <Text style={styles.heroCallBtnText}>Call</Text>
+      {/* Header Image */}
+      <View style={styles.heroImageContainer}>
+        <Image 
+          source={{ uri: provider.image }} 
+          style={styles.heroImage}
+          resizeMode="cover"
+        />
+        
+        {/* Header Buttons */}
+        <View style={[styles.headerOverlay, { paddingTop: 10 + insets.top }]}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
+            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={styles.headerBtn}>
+              <Ionicons name="share-outline" size={20} color="#FFFFFF" />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.heroEnquiryBtn}
-              onPress={() => navigation.navigate('SendEnquiry', { provider: { ...provider, initials } })}>
-              <Ionicons name="paper-plane-outline" size={18} color="#1D4ED8" />
-              <Text style={styles.heroEnquiryBtnText}>Send Enquiry</Text>
+            <TouchableOpacity style={styles.headerBtn}>
+              <Ionicons name="bookmark-outline" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
-
-      {/* Tabs */}
-      <View style={styles.tabs}>
-        {TABS.map(tab => (
-          <TouchableOpacity
-            key={tab}
-            style={[styles.tab, activeTab === tab && styles.tabActive]}
-            onPress={() => setActiveTab(tab)}>
-            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
-          </TouchableOpacity>
-        ))}
       </View>
 
-      {/* Tab Content - Each tab has its own ScrollView */}
-      {activeTab === 'About' && (
-        <ScrollView
-          style={{ flex: 1 }}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}>
-          <View style={{ gap: 14 }}>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>About</Text>
-              <Text style={styles.bio}>{provider.bio}</Text>
-            </View>
-
-            {/* Info grid */}
-            <View style={styles.infoGrid}>
-              {[
-                { icon: 'location-outline', label: 'Location', value: provider.city },
-                { icon: 'construct-outline', label: 'Service', value: provider.service },
-                { icon: 'time-outline', label: 'Experience', value: `${provider.experience} years` },
-                { icon: 'language-outline', label: 'Languages', value: 'Hindi, Gujarati' },
-                { icon: 'sunny-outline', label: 'Work Days', value: 'Mon – Sat' },
-                { icon: 'alarm-outline', label: 'Hours', value: '9:00 AM – 7:00 PM' },
-              ].map(info => (
-                <View key={info.label} style={styles.infoCard}>
-                  <View style={styles.infoIcon}>
-                    <Ionicons name={info.icon as any} size={18} color="#FF6B00" />
-                  </View>
-                  <Text style={styles.infoLabel}>{info.label}</Text>
-                  <Text style={styles.infoValue}>{info.value}</Text>
-                </View>
-              ))}
-            </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}>
+        
+        {/* Service Title & Info */}
+        <View style={styles.serviceHeader}>
+          <View style={styles.titleRow}>
+            <Text style={styles.serviceTitle}>{provider.service}</Text>
+            <TouchableOpacity>
+              <Ionicons name="bookmark-outline" size={22} color="#7C3AED" />
+            </TouchableOpacity>
           </View>
-        </ScrollView>
-      )}
-
-      {activeTab === 'Services' && (
-        <ScrollView
-          style={{ flex: 1 }}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Services Offered</Text>
-            <View style={{ gap: 0 }}>
-              {MOCK_SERVICES.map((service, i) => (
-                <View key={i} style={[styles.serviceRow, i === MOCK_SERVICES.length - 1 && { borderBottomWidth: 0 }]}>
-                  <View style={styles.serviceDot}>
-                    <Ionicons name="checkmark" size={16} color="#FF6B00" />
-                  </View>
-                  <Text style={styles.serviceText}>{service}</Text>
+          
+          <View style={styles.providerRow}>
+            <Image 
+              source={{ uri: 'https://i.pravatar.cc/100?img=5' }} 
+              style={styles.providerAvatar}
+            />
+            <View style={{ flex: 1 }}>
+              <View style={styles.nameRatingRow}>
+                <Text style={styles.providerName}>{provider.name}</Text>
+                <View style={styles.ratingBadge}>
+                  <Ionicons name="star" size={12} color="#FFB800" />
+                  <Text style={styles.ratingText}>{provider.rating}</Text>
+                  <Text style={styles.reviewsText}>({provider.reviews} reviews)</Text>
                 </View>
-              ))}
-            </View>
-          </View>
-        </ScrollView>
-      )}
-
-      {activeTab === 'Reviews' && (
-        <ScrollView
-          style={{ flex: 1 }}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}>
-          <View style={{ gap: 14 }}>
-            {/* Summary */}
-            <View style={styles.reviewSummary}>
-              <View style={styles.ratingCircle}>
-                <Text style={styles.bigRating}>{provider.rating}</Text>
-                <StarRow rating={Math.round(provider.rating)} />
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.totalReviews}>{provider.reviews} Total Reviews</Text>
-                <Text style={styles.reviewSubtext}>Based on customer feedback</Text>
+              <View style={styles.locationRow}>
+                <Ionicons name="location" size={14} color="#7C3AED" />
+                <Text style={styles.locationText}>{provider.city}</Text>
               </View>
             </View>
-            {MOCK_REVIEWS.map(review => (
-              <View key={review.id} style={styles.reviewCard}>
-                <View style={styles.reviewHeader}>
-                  <View style={styles.reviewAvatar}>
-                    <Text style={styles.reviewAvatarText}>{review.name[0]}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.reviewName}>{review.name}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                      <StarRow rating={review.rating} />
-                      <Text style={styles.reviewDate}>• {review.date}</Text>
-                    </View>
-                  </View>
-                </View>
-                <Text style={styles.reviewComment}>{review.comment}</Text>
+          </View>
+
+          {/* Price - REMOVED */}
+        </View>
+
+        {/* About Me */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>About me</Text>
+          <Text style={styles.aboutText}>{provider.bio}</Text>
+        </View>
+
+        {/* Photos & Videos */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Photos & Videos</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.galleryGrid}>
+            {MOCK_GALLERY.map((img) => (
+              <View key={img.id} style={styles.galleryItem}>
+                <Image source={{ uri: img.uri }} style={styles.galleryImage} />
               </View>
             ))}
           </View>
-        </ScrollView>
-      )}
+        </View>
+
+        {/* Reviews */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.reviewsHeader}>
+              <Ionicons name="star" size={18} color="#FFB800" />
+              <Text style={styles.reviewsTitle}>{provider.rating} ({provider.reviews} reviews)</Text>
+            </View>
+            <TouchableOpacity>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Rating Filters */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}>
+            {RATING_FILTERS.map((filter) => (
+              <TouchableOpacity
+                key={filter.value}
+                style={[
+                  styles.filterChip,
+                  selectedRatingFilter === filter.value && styles.filterChipActive
+                ]}
+                onPress={() => setSelectedRatingFilter(filter.value)}>
+                <Ionicons 
+                  name={filter.icon as any} 
+                  size={14} 
+                  color={selectedRatingFilter === filter.value ? '#7C3AED' : '#888'} 
+                />
+                <Text style={[
+                  styles.filterText,
+                  selectedRatingFilter === filter.value && styles.filterTextActive
+                ]}>
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* Review Cards */}
+          {MOCK_REVIEWS.map(review => (
+            <View key={review.id} style={styles.reviewCard}>
+              <View style={styles.reviewHeader}>
+                <View style={styles.reviewAvatar}>
+                  <Text style={styles.reviewAvatarText}>{review.avatar}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.reviewName}>{review.name}</Text>
+                  <View style={styles.reviewMeta}>
+                    <View style={styles.ratingBadgeSmall}>
+                      <Ionicons name="star" size={10} color="#FFFFFF" />
+                      <Text style={styles.ratingBadgeText}>{review.rating}</Text>
+                    </View>
+                    <TouchableOpacity style={styles.moreBtn}>
+                      <Ionicons name="ellipsis-horizontal-circle-outline" size={16} color="#888" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+              <Text style={styles.reviewComment}>{review.comment}</Text>
+              <View style={styles.reviewFooter}>
+                <TouchableOpacity style={styles.likeBtn}>
+                  <Ionicons name="heart-outline" size={14} color="#888" />
+                  <Text style={styles.likeText}>{review.likes}</Text>
+                </TouchableOpacity>
+                <Text style={styles.reviewDate}>{review.date}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      {/* Bottom Action Buttons */}
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 10 }]}>
+        <TouchableOpacity style={styles.messageBtn}>
+          <Text style={styles.messageBtnText}>Message</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.bookBtn}
+          onPress={() => navigation.navigate('SendEnquiry', { provider })}>
+          <Text style={styles.bookBtnText}>Book Now</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F4F0', flexDirection: 'column' },
-  hero: { paddingBottom: 20, flexShrink: 0 },
-  backBtn: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 6, width: 60 },
-  heroContent: { alignItems: 'center', paddingHorizontal: 24, gap: 4 },
-  avatar: {
-    width: 70, height: 70, borderRadius: 35,
-    backgroundColor: 'rgba(255,255,255,0.15)', borderWidth: 3, borderColor: 'rgba(255,255,255,0.4)',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 6,
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  heroImageContainer: {
+    width: SCREEN_WIDTH,
+    height: 280,
+    position: 'relative',
   },
-  avatarText: { fontSize: 24, fontWeight: '700' as any, color: '#FFFFFF' },
-  verifiedBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 3,
-    backgroundColor: 'rgba(219,234,254,0.25)', paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
-    marginBottom: 3,
+  heroImage: {
+    width: '100%',
+    height: '100%',
   },
-  verifiedText: { fontSize: 9, color: '#DBEAFE', fontWeight: '700' as any },
-  heroName: { fontSize: 19, fontWeight: '700' as any, color: '#FFFFFF', letterSpacing: -0.4 },
-  heroService: { fontSize: 12, color: 'rgba(255,255,255,0.65)' },
-  statsRow: {
-    flexDirection: 'row', alignItems: 'center',
-    marginTop: 10, backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 12, paddingVertical: 10, paddingHorizontal: 8, width: '100%',
+  headerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingBottom: 10,
   },
-  stat: { flex: 1, alignItems: 'center', gap: 2 },
-  statValue: { fontSize: 16, fontWeight: '700' as any, color: '#FFFFFF' },
-  statLabel: { fontSize: 9, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.5 },
-  statDivider: { width: 1, height: 24, backgroundColor: 'rgba(255,255,255,0.15)' },
-  heroButtons: {
-    flexDirection: 'row', gap: 12, width: '100%', marginTop: 14,
+  headerBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  heroCallBtn: {
-    flex: 1, height: 46, borderRadius: 23,
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+  headerRight: {
+    flexDirection: 'row',
+    gap: 10,
   },
-  heroCallBtnText: { fontSize: 15, fontWeight: '700' as any, color: '#FFFFFF' },
-  heroEnquiryBtn: {
-    flex: 2, height: 46, backgroundColor: '#FFFFFF', borderRadius: 23,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+  scroll: { paddingBottom: 20 },
+  serviceHeader: {
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
-  heroEnquiryBtnText: { fontSize: 15, fontWeight: '700' as any, color: '#1D4ED8' },
-  tabs: {
-    flexDirection: 'row', backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1, borderBottomColor: '#ECECEC',
-    flexShrink: 0,  // ← add this
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  tab: { flex: 1, height: 44, alignItems: 'center', justifyContent: 'center' },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: '#FF6B00' },
-  tabText: { fontSize: 13, fontWeight: '600' as any, color: '#888888' },
-  tabTextActive: { color: '#FF6B00', fontWeight: '700' as any },
-  scroll: { padding: 18, paddingBottom: 100 },
-  section: { backgroundColor: '#FFFFFF', borderRadius: 18, padding: 18, borderWidth: 1, borderColor: '#ECECEC' },
-  sectionTitle: { fontSize: 18, fontWeight: '700' as any, color: '#0D0D0D', marginBottom: 14, letterSpacing: -0.3 },
-  bio: { fontSize: 13, color: '#888888', lineHeight: 20 },
-  infoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  infoCard: {
-    width: '47%', backgroundColor: '#FFFFFF', borderRadius: 18, padding: 14,
-    alignItems: 'flex-start', gap: 6, borderWidth: 1, borderColor: '#ECECEC',
+  serviceTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0D0D0D',
+    letterSpacing: -0.3,
   },
-  infoIcon: {
-    width: 36, height: 36, borderRadius: 10,
-    backgroundColor: '#FFF4ED', alignItems: 'center', justifyContent: 'center',
+  providerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
   },
-  infoLabel: { fontSize: 10, fontWeight: '600' as any, color: '#888888', textTransform: 'uppercase', letterSpacing: 0.5 },
-  infoValue: { fontSize: 13, fontWeight: '600' as any, color: '#0D0D0D' },
-  serviceRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#ECECEC'
+  providerAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
-  serviceDot: {
-    width: 32, height: 32, borderRadius: 10, backgroundColor: '#FFF4ED',
-    alignItems: 'center', justifyContent: 'center',
+  nameRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
   },
-  serviceText: { fontSize: 14, color: '#0D0D0D', fontWeight: '600' as any, flex: 1 },
-  reviewSummary: {
-    backgroundColor: '#FFFFFF', borderRadius: 18, padding: 20,
-    flexDirection: 'row', alignItems: 'center', gap: 16, borderWidth: 1, borderColor: '#ECECEC',
+  providerName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0D0D0D',
   },
-  ratingCircle: {
-    width: 80, height: 80, borderRadius: 40,
-    backgroundColor: '#FFF4ED', alignItems: 'center', justifyContent: 'center', gap: 4,
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
   },
-  bigRating: { fontSize: 28, fontWeight: '700' as any, color: '#FF6B00' },
-  totalReviews: { fontSize: 15, color: '#0D0D0D', fontWeight: '700' as any },
-  reviewSubtext: { fontSize: 12, color: '#888888', marginTop: 2 },
-  reviewCard: { backgroundColor: '#FFFFFF', borderRadius: 18, padding: 16, gap: 12, borderWidth: 1, borderColor: '#ECECEC' },
-  reviewHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  ratingText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0D0D0D',
+  },
+  reviewsText: {
+    fontSize: 11,
+    color: '#888',
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  locationText: {
+    fontSize: 12,
+    color: '#888',
+    flex: 1,
+  },
+  section: {
+    paddingHorizontal: 18,
+    paddingTop: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0D0D0D',
+    letterSpacing: -0.3,
+  },
+  seeAllText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#7C3AED',
+  },
+  aboutText: {
+    fontSize: 13,
+    color: '#666',
+    lineHeight: 20,
+  },
+  galleryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  galleryItem: {
+    width: '48%',
+    aspectRatio: 0.75,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#F0F0F0',
+  },
+  galleryImage: {
+    width: '100%',
+    height: '100%',
+  },
+  reviewsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  reviewsTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0D0D0D',
+  },
+  filterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingBottom: 16,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  filterChipActive: {
+    backgroundColor: '#F3E8FF',
+    borderColor: '#7C3AED',
+  },
+  filterText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#888',
+  },
+  filterTextActive: {
+    color: '#7C3AED',
+  },
+  reviewCard: {
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginBottom: 10,
+  },
   reviewAvatar: {
-    width: 42, height: 42, borderRadius: 21, backgroundColor: '#FFF4ED',
-    borderWidth: 2, borderColor: '#FF6B00', alignItems: 'center', justifyContent: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3E8FF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  reviewAvatarText: { fontSize: 15, fontWeight: '700' as any, color: '#FF6B00' },
-  reviewName: { fontSize: 14, fontWeight: '700' as any, color: '#0D0D0D' },
-  reviewDate: { fontSize: 11, color: '#888888' },
-  reviewComment: { fontSize: 13, color: '#666666', lineHeight: 20, paddingLeft: 54 },
+  reviewAvatarText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#7C3AED',
+  },
+  reviewName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0D0D0D',
+    marginBottom: 4,
+  },
+  reviewMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  ratingBadgeSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#7C3AED',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  ratingBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  moreBtn: {
+    padding: 4,
+  },
+  reviewComment: {
+    fontSize: 13,
+    color: '#666',
+    lineHeight: 20,
+    marginBottom: 10,
+  },
+  reviewFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  likeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  likeText: {
+    fontSize: 12,
+    color: '#888',
+  },
+  reviewDate: {
+    fontSize: 11,
+    color: '#888',
+  },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 18,
+    paddingTop: 12,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  messageBtn: {
+    flex: 1,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#F3E8FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  messageBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#7C3AED',
+  },
+  bookBtn: {
+    flex: 1,
+    height: 50,
+    backgroundColor: '#7C3AED',
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bookBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
 });

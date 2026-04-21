@@ -8,11 +8,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SERVICES } from '../../data/mockData';
+import { LocationModal } from '../../components/LocationModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_WIDTH = SCREEN_WIDTH - 36; // 18px margin on each side
-
-const CATEGORIES = ['All', 'Plumber', 'Electrician', 'Cleaning'];
 
 const PROMOTIONAL_BANNERS = [
   {
@@ -107,6 +106,8 @@ const SERVICE_ICON_MAP: Record<string, string> = {
 export const HomeScreen = ({ navigation }: any) => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState('Palanpur, Gujarat');
   const bannerScrollRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
 
@@ -143,13 +144,14 @@ export const HomeScreen = ({ navigation }: any) => {
         <View style={styles.headerTop}>
           <View>
             <Text style={styles.greeting}>Good morning, Darshan 👋</Text>
-            <View style={styles.locationRow}>
+            <TouchableOpacity 
+              style={styles.locationRow}
+              onPress={() => setLocationModalVisible(true)}
+              activeOpacity={0.7}>
               <Ionicons name="location" size={12} color="#FF6B00" />
-              <Text style={styles.locationText}>Palanpur, Gujarat · </Text>
-              <TouchableOpacity>
-                <Text style={styles.changeText}>Change</Text>
-              </TouchableOpacity>
-            </View>
+              <Text style={styles.locationText}>{currentLocation} · </Text>
+              <Text style={styles.changeText}>Change</Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.headerIcons}>
             <TouchableOpacity
@@ -166,36 +168,16 @@ export const HomeScreen = ({ navigation }: any) => {
           </View>
         </View>
 
-        {/* Search Row */}
-        <View style={styles.searchRow}>
-          <TouchableOpacity
-            style={styles.searchBar}
-            onPress={() => navigation.navigate('Search')}
-            activeOpacity={0.8}>
-            <Ionicons name="search-outline" size={15} color="#bbb" />
-            <Text style={styles.searchPlaceholder}>Search services or providers...</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterBtn}>
-            <Ionicons name="options-outline" size={16} color="#fff" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Category Chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipsContainer}>
-          {CATEGORIES.map((cat) => (
-            <TouchableOpacity
-              key={cat}
-              style={[styles.chip, selectedCategory === cat && styles.chipActive]}
-              onPress={() => setSelectedCategory(cat)}>
-              <Text style={[styles.chipText, selectedCategory === cat && styles.chipTextActive]}>
-                {cat}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        {/* Search Bar */}
+        <TouchableOpacity
+          style={styles.searchBar}
+          onPress={() => navigation.navigate('Search', { focus: true })}
+          activeOpacity={0.8}>
+          <Ionicons name="search-outline" size={15} color="#bbb" />
+          <Text style={styles.searchPlaceholder}>Search services or providers...</Text>
+          <View style={styles.divider} />
+          <Ionicons name="mic-outline" size={20} color="#888" />
+        </TouchableOpacity>
       </BlurView>
 
       {/* Scrollable Content */}
@@ -360,6 +342,14 @@ export const HomeScreen = ({ navigation }: any) => {
 
         <View style={{ height: 20 }} />
       </ScrollView>
+
+      {/* Location Modal */}
+      <LocationModal
+        visible={locationModalVisible}
+        onClose={() => setLocationModalVisible(false)}
+        onSelectLocation={(location) => setCurrentLocation(location)}
+        currentLocation={currentLocation}
+      />
     </View>
   );
 };
@@ -443,13 +433,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
   },
-  searchRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 12,
-  },
   searchBar: {
-    flex: 1,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#ECECEC',
@@ -459,18 +443,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginTop: 12,
   },
   searchPlaceholder: {
+    flex: 1,
     fontSize: 13,
     color: '#bbb',
   },
-  filterBtn: {
-    width: 44,
-    height: 44,
-    backgroundColor: '#0D0D0D',
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+  divider: {
+    width: 1,
+    height: 24,
+    backgroundColor: '#ECECEC',
+    marginHorizontal: 8,
   },
   chipsContainer: {
     flexDirection: 'row',
@@ -501,7 +485,6 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   bannerContainer: {
-    marginTop: 14,
     position: 'relative',
   },
   bannerSlide: {

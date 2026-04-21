@@ -15,8 +15,6 @@ import { ForgotPasswordScreen } from '../screens/auth/ForgotPasswordScreen';
 
 // Customer
 import { HomeScreen } from '../screens/customer/HomeScreen';
-import { AllServicesScreen } from '../screens/customer/AllServicesScreen';
-import { ProviderListingScreen } from '../screens/customer/ProviderListingScreen';
 import { ProviderProfileScreen } from '../screens/customer/ProviderProfileScreen';
 import { SendEnquiryScreen } from '../screens/customer/SendEnquiryScreen';
 import { SavedProvidersScreen } from '../screens/customer/SavedProvidersScreen';
@@ -49,8 +47,7 @@ type CustomerTabConfig = {
 
 const CUSTOMER_TABS: CustomerTabConfig[] = [
   { name: 'Home', label: 'Home', icon: 'home', component: HomeScreen },
-  { name: 'AllServices', label: 'Services', icon: 'grid', component: AllServicesScreen },
-  { name: 'Providers', label: 'Providers', icon: 'people', component: ProviderListingScreen },
+  { name: 'Search', label: 'Search', icon: 'search', component: SearchScreen },
   { name: 'Saved', label: 'Saved', icon: 'bookmark', component: SavedProvidersScreen },
   { name: 'Profile', label: 'Profile', icon: 'person', component: ProfileScreen },
 ];
@@ -59,7 +56,7 @@ const CustomerTab = createBottomTabNavigator();
 
 function CustomerTabBar({ state, descriptors, navigation }: any) {
   const insets = useSafeAreaInsets();
-  
+
   return (
     <View style={[tabStyles.bar, { paddingBottom: insets.bottom, height: 68 + insets.bottom }]}>
       {state.routes.map((route: any, index: number) => {
@@ -119,7 +116,7 @@ const ProviderTab = createBottomTabNavigator();
 
 function ProviderTabBar({ state, descriptors, navigation }: any) {
   const insets = useSafeAreaInsets();
-  
+
   return (
     <View style={[tabStyles.bar, { paddingBottom: insets.bottom, height: 68 + insets.bottom }]}>
       {state.routes.map((route: any, index: number) => {
@@ -181,7 +178,6 @@ export function RootNavigator() {
       {/* Customer Stack Screens */}
       <RootStack.Screen name="ProviderProfile" component={ProviderProfileScreen} />
       <RootStack.Screen name="SendEnquiry" component={SendEnquiryScreen} />
-      <RootStack.Screen name="Search" component={SearchScreen} options={{ presentation: 'modal' }} />
       <RootStack.Screen name="EditProfile" component={EditProfileScreen} />
       <RootStack.Screen name="BecomeProvider" component={BecomeProviderScreen} />
 
