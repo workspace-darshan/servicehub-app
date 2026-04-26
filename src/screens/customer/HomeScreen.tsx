@@ -249,7 +249,7 @@ export const HomeScreen = ({ navigation }: any) => {
                 <TouchableOpacity
                   key={service.id}
                   style={styles.serviceItem}
-                  onPress={() => navigation.navigate('Providers', { service: service.name })}
+                  onPress={() => navigation.navigate('Search', { service: service.name })}
                   activeOpacity={0.7}>
                   <View style={[styles.serviceBox, { backgroundColor: colorSet.bg }]}>
                     <Ionicons

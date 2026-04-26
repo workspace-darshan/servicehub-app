@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { Button } from '../../components/ui';
 import { Colors, FontSize, FontWeight, BorderRadius } from '../../constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 

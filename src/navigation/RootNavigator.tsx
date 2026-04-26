@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, FontSize, FontWeight, Shadows } from '../constants/theme';
+import { Colors } from '../constants/theme';
 
 // Auth
 import { SplashScreen } from '../screens/auth/SplashScreen';
@@ -34,6 +34,7 @@ import { HowItWorksScreen } from '../screens/shared/HowItWorksScreen';
 import { SettingsScreen } from '../screens/shared/SettingsScreen';
 import { AboutScreen } from '../screens/shared/AboutScreen';
 import { ContactScreen } from '../screens/shared/ContactScreen';
+import { PrivacyPolicyScreen } from '../screens/shared/PrivacyPolicyScreen';
 
 // ─────────────────────────────────────────────
 // CUSTOMER TABS
@@ -58,27 +59,31 @@ function CustomerTabBar({ state, descriptors, navigation }: any) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[tabStyles.bar, { paddingBottom: insets.bottom, height: 68 + insets.bottom }]}>
-      {state.routes.map((route: any, index: number) => {
-        const isActive = state.index === index;
-        const tab = CUSTOMER_TABS[index];
-        return (
-          <TouchableOpacity
-            key={route.key}
-            style={tabStyles.tabItem}
-            onPress={() => navigation.navigate(route.name)}
-            activeOpacity={0.7}>
-            <Ionicons
-              name={isActive ? tab.icon : `${tab.icon}-outline`}
-              size={22}
-              color={isActive ? Colors.primary : Colors.slate400}
-            />
-            <Text style={[tabStyles.tabLabel, isActive && tabStyles.tabLabelActive]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+    <View style={[tabStyles.barWrapper, { bottom: insets.bottom + 16 }]}>
+      <View style={tabStyles.bar}>
+        {state.routes.map((route: any, index: number) => {
+          const isActive = state.index === index;
+          const tab = CUSTOMER_TABS[index];
+          return (
+            <TouchableOpacity
+              key={route.key}
+              style={tabStyles.tabItem}
+              onPress={() => navigation.navigate(route.name)}
+              activeOpacity={0.7}>
+              <View style={[tabStyles.iconWrap, isActive && tabStyles.iconWrapActive]}>
+                <Ionicons
+                  name={isActive ? tab.icon : `${tab.icon}-outline`}
+                  size={20}
+                  color={isActive ? '#FF6B00' : '#888'}
+                />
+              </View>
+              <Text style={[tabStyles.tabLabel, isActive && tabStyles.tabLabelActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -118,27 +123,31 @@ function ProviderTabBar({ state, descriptors, navigation }: any) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[tabStyles.bar, { paddingBottom: insets.bottom, height: 68 + insets.bottom }]}>
-      {state.routes.map((route: any, index: number) => {
-        const isActive = state.index === index;
-        const tab = PROVIDER_TABS[index];
-        return (
-          <TouchableOpacity
-            key={route.key}
-            style={tabStyles.tabItem}
-            onPress={() => navigation.navigate(route.name)}
-            activeOpacity={0.7}>
-            <Ionicons
-              name={isActive ? tab.icon : `${tab.icon}-outline`}
-              size={22}
-              color={isActive ? Colors.primary : Colors.slate400}
-            />
-            <Text style={[tabStyles.tabLabel, isActive && tabStyles.tabLabelActive]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+    <View style={[tabStyles.barWrapper, { bottom: insets.bottom + 16 }]}>
+      <View style={tabStyles.bar}>
+        {state.routes.map((route: any, index: number) => {
+          const isActive = state.index === index;
+          const tab = PROVIDER_TABS[index];
+          return (
+            <TouchableOpacity
+              key={route.key}
+              style={tabStyles.tabItem}
+              onPress={() => navigation.navigate(route.name)}
+              activeOpacity={0.7}>
+              <View style={[tabStyles.iconWrap, isActive && tabStyles.iconWrapActive]}>
+                <Ionicons
+                  name={isActive ? tab.icon : `${tab.icon}-outline`}
+                  size={20}
+                  color={isActive ? '#FF6B00' : '#888'}
+                />
+              </View>
+              <Text style={[tabStyles.tabLabel, isActive && tabStyles.tabLabelActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -190,35 +199,59 @@ export function RootNavigator() {
       <RootStack.Screen name="Settings" component={SettingsScreen} />
       <RootStack.Screen name="About" component={AboutScreen} />
       <RootStack.Screen name="Contact" component={ContactScreen} />
+      <RootStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
     </RootStack.Navigator>
   );
 }
 
 // ─────────────────────────────────────────────
 const tabStyles = StyleSheet.create({
+  barWrapper: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
   bar: {
     flexDirection: 'row',
-    height: 68,
-    backgroundColor: Colors.white,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    ...Shadows.nav,
+    width: '72%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 40,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingBottom: 6,
     gap: 3,
+  },
+  iconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapActive: {
+    backgroundColor: '#FFF4ED',
   },
   tabLabel: {
     fontSize: 10,
-    color: Colors.slate400,
-    fontWeight: FontWeight.medium,
-    letterSpacing: 0.3,
+    color: '#888',
+    fontWeight: '500',
+    letterSpacing: 0.2,
   },
   tabLabelActive: {
-    color: Colors.primary,
-    fontWeight: FontWeight.bold,
+    color: '#FF6B00',
+    fontWeight: '700',
   },
 });

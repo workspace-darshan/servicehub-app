@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TopBar } from '../../components/TopBar';
 import { HOW_IT_WORKS_CUSTOMER, HOW_IT_WORKS_PROVIDER } from '../../data/mockData';
 
@@ -36,6 +37,7 @@ const STEP_ICONS: Record<string, React.ComponentProps<typeof Ionicons>['name']> 
 export const HowItWorksScreen = ({ navigation }: any) => {
   const [tab, setTab] = useState<TabKey>('customer');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const insets = useSafeAreaInsets();
   const steps = tab === 'customer' ? HOW_IT_WORKS_CUSTOMER : HOW_IT_WORKS_PROVIDER;
 
   return (
@@ -135,7 +137,7 @@ export const HowItWorksScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: '#F5F4F0', overflow: 'hidden' },
+  container: { flex: 1, backgroundColor: '#F5F4F0', overflow: 'hidden' },
   scrollView: { flex: 1 },
   scroll: {
     padding: 18,

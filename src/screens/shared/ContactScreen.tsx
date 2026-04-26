@@ -125,7 +125,7 @@ export const ContactScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: '#F5F4F0', overflow: 'hidden' },
+  container: { flex: 1, backgroundColor: '#F5F4F0', overflow: 'hidden' },
   scrollView: { flex: 1 },
   scroll: { padding: 18, gap: 10 },
 

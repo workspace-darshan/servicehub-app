@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Dimensions,
+  View, Text, StyleSheet, TouchableOpacity, Dimensions, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, FontSize, FontWeight, BorderRadius } from '../../constants/theme';
+import { Colors } from '../../constants/theme';
 
 const { height } = Dimensions.get('window');
 
@@ -14,28 +14,31 @@ const SLIDES = [
     id: 1,
     title: 'Find Trusted Service Providers',
     body: 'Browse verified professionals for all your home service needs.',
-    bg: ['#FF6B00', '#FF9A3C'],
+    bg: ['#FF6B00', '#FF9A3C'] as [string, string],
     accent: '#FF6B00',
     badgeIcon: 'shield-checkmark',
     badgeText: 'Verified Pros',
+    image: require('../../../assets/steps/TrustedProfessionals.png'),
   },
   {
     id: 2,
     title: 'Book Services Instantly',
     body: 'Send enquiries and get quick responses from service providers.',
-    bg: ['#9333EA', '#A78BFA'],
+    bg: ['#9333EA', '#A78BFA'] as [string, string],
     accent: '#9333EA',
     badgeIcon: 'flash',
     badgeText: 'Fast Response',
+    image: require('../../../assets/steps/ServiceSample.png'),
   },
   {
     id: 3,
     title: 'Track & Review',
     body: 'Manage your bookings and share feedback to help the community.',
-    bg: ['#16A34A', '#4ADE80'],
+    bg: ['#16A34A', '#4ADE80'] as [string, string],
     accent: '#16A34A',
     badgeIcon: 'star',
     badgeText: 'Top Rated',
+    image: require('../../../assets/steps/CompareChoose.png'),
   },
 ];
 
@@ -69,11 +72,13 @@ export const OnboardingScreen = ({ navigation }: any) => {
 
       {/* Illustration area */}
       <LinearGradient
-        colors={slide.bg as [string, string, ...string[]]}
+        colors={slide.bg}
         style={styles.illustrationArea}>
-        <View style={styles.illustrationIconBg}>
-          <Ionicons name="flash" size={80} color="#fff" />
-        </View>
+        <Image
+          source={slide.image}
+          style={styles.illustrationImage}
+          resizeMode="cover"
+        />
         
         {/* Floating badge */}
         <View style={[styles.floatingBadge, { borderColor: slide.accent + '30' }]}>
@@ -171,13 +176,11 @@ const styles = StyleSheet.create({
     height: ILLUS_HEIGHT,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
-  illustrationIconBg: {
-    width: 160, height: 160, borderRadius: 80,
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
+  illustrationImage: {
+    width: '100%',
+    height: '100%',
   },
   floatingBadge: {
     position: 'absolute',
