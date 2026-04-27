@@ -27,6 +27,11 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "owner": "darshanmevadas-organization"
+    "extra": {
+      "eas": {
+        "projectId": "d8c0d273-4182-4fd9-910c-b8d685689156"
+      }
+    },
+    "owner": "techsture"
   }
 }

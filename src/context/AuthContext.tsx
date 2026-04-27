@@ -9,6 +9,7 @@ interface AuthContextType {
   register: (email: string, password: string, name: string, phone: string, location: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => Promise<void>;
+  toggleProviderMode: (isProvider: boolean) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -157,6 +158,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const toggleProviderMode = async (isProvider: boolean) => {
+    try {
+      if (user) {
+        const updatedUser = { ...user, isProvider };
+        await saveUser(updatedUser);
+        setUser(updatedUser);
+
+        // Update in mock database
+        const users = await getMockUsers();
+        const index = users.findIndex((u: any) => u.id === user.id);
+        if (index !== -1) {
+          users[index] = { ...users[index], isProvider };
+          await saveMockUsers(users);
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling provider mode:', error);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -167,6 +188,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         register,
         logout,
         updateUser,
+        toggleProviderMode,
       }}>
       {children}
     </AuthContext.Provider>

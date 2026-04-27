@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput,
-  Dimensions, Modal, Animated, PanResponder,
+  Dimensions, Modal, Animated,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,7 +11,6 @@ import { SERVICES, PROVIDERS } from '../../data/mockData';
 const { height } = Dimensions.get('window');
 
 const SHEET_HEIGHT = height * 0.75;
-const SHEET_EXPANDED_HEIGHT = height * 0.95;
 
 const screenWidth = Dimensions.get('window').width;
 const numColumns = 5;
@@ -85,45 +84,18 @@ export const SearchScreen = ({ navigation, route }: any) => {
     selectedCity !== 'All Cities', verifiedOnly, minRating > 0, minExp > 0,
   ].filter(Boolean).length;
 
-  const [isExpanded, setIsExpanded] = useState(false);
-  const sheetHeight = useRef(new Animated.Value(SHEET_HEIGHT)).current;
-
   const openSheet = () => {
     setDraftCity(selectedCity); setDraftVerified(verifiedOnly);
     setDraftRating(minRating); setDraftExp(minExp);
     setSheetOpen(true);
-    setIsExpanded(false);
     Animated.spring(translateY, { toValue: 0, useNativeDriver: true, tension: 65, friction: 11 }).start();
-    sheetHeight.setValue(SHEET_HEIGHT);
   };
 
   const closeSheet = () => {
     Animated.timing(translateY, { toValue: SHEET_HEIGHT, duration: 280, useNativeDriver: true })
       .start(() => {
         setSheetOpen(false);
-        setIsExpanded(false);
-        sheetHeight.setValue(SHEET_HEIGHT);
       });
-  };
-
-  const expandSheet = () => {
-    setIsExpanded(true);
-    Animated.spring(sheetHeight, { 
-      toValue: SHEET_EXPANDED_HEIGHT, 
-      useNativeDriver: false,
-      tension: 65,
-      friction: 11
-    }).start();
-  };
-
-  const collapseSheet = () => {
-    setIsExpanded(false);
-    Animated.spring(sheetHeight, { 
-      toValue: SHEET_HEIGHT, 
-      useNativeDriver: false, 
-      tension: 65, 
-      friction: 11 
-    }).start();
   };
 
   const applyFilters = () => {
@@ -136,67 +108,6 @@ export const SearchScreen = ({ navigation, route }: any) => {
     setDraftCity('All Cities'); setDraftVerified(false);
     setDraftRating(0); setDraftExp(0);
   };
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: (_, g) => {
-        if (isExpanded) {
-          // When expanded, only allow dragging down to collapse
-          if (g.dy > 0) {
-            const newHeight = SHEET_EXPANDED_HEIGHT - g.dy;
-            if (newHeight >= SHEET_HEIGHT) {
-              sheetHeight.setValue(newHeight);
-            }
-          }
-        } else {
-          // When collapsed, allow dragging up to expand or down to close
-          if (g.dy < 0) {
-            // Dragging up to expand
-            const newHeight = SHEET_HEIGHT + Math.abs(g.dy);
-            if (newHeight <= SHEET_EXPANDED_HEIGHT) {
-              sheetHeight.setValue(newHeight);
-            }
-          } else if (g.dy > 0) {
-            // Dragging down to close
-            translateY.setValue(g.dy);
-          }
-        }
-      },
-      onPanResponderRelease: (_, g) => {
-        if (isExpanded) {
-          // When expanded, check if dragging down enough to collapse
-          if (g.dy > 100) {
-            collapseSheet();
-          } else {
-            // Snap back to expanded
-            Animated.spring(sheetHeight, { 
-              toValue: SHEET_EXPANDED_HEIGHT, 
-              useNativeDriver: false 
-            }).start();
-          }
-        } else {
-          // When collapsed
-          if (g.dy < -100) {
-            // Dragged up enough to expand
-            expandSheet();
-          } else if (g.dy > 80) {
-            // Dragged down enough to close
-            closeSheet();
-          } else if (g.dy < 0) {
-            // Snap back to collapsed height
-            Animated.spring(sheetHeight, { 
-              toValue: SHEET_HEIGHT, 
-              useNativeDriver: false 
-            }).start();
-          } else {
-            // Snap back to collapsed position
-            Animated.spring(translateY, { toValue: 0, useNativeDriver: true }).start();
-          }
-        }
-      },
-    })
-  ).current;
 
   useEffect(() => {
     if (route?.params?.focus) {
@@ -501,10 +412,7 @@ export const SearchScreen = ({ navigation, route }: any) => {
       {/* Filter bottom sheet */}
       <Modal transparent visible={sheetOpen} animationType="none" onRequestClose={closeSheet}>
         <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeSheet} />
-        <Animated.View style={[styles.sheet, { height: sheetHeight, transform: [{ translateY }] }]}>
-          <View {...panResponder.panHandlers} style={styles.dragArea}>
-            <View style={styles.handle} />
-          </View>
+        <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
           <View style={styles.sheetHeader}>
             <Text style={styles.sheetTitle}>Filter Providers</Text>
             <TouchableOpacity onPress={resetFilters}>
@@ -828,16 +736,14 @@ const styles = StyleSheet.create({
     height: height * 0.75, backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden',
   },
-  dragArea: { width: '100%', paddingVertical: 12, alignItems: 'center' },
-  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: '#DDDDDD' },
   sheetHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingBottom: 12,
+    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12,
     borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
   sheetTitle: { fontSize: 16, fontWeight: '700', color: '#0D0D0D', letterSpacing: -0.3 },
   resetText: { fontSize: 13, color: '#FF6B00', fontWeight: '600' },
-  sheetBody: { padding: 20, paddingBottom: 12 },
+  sheetBody: { padding: 20, paddingBottom: 0 },
   filterLabel: {
     fontSize: 10, fontWeight: '700', color: '#AAAAAA',
     textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10,

@@ -24,18 +24,27 @@ export interface User {
 
 export interface ProviderProfile {
   userId: string;
-  service: string;
-  bio: string;
-  experience: number;
+  businessName: string;
+  description: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    googleMapsLink?: string;
+  };
+  services: string[];
+  serviceArea: string;
+  serviceRadius: number;
   rating: number;
   reviews: number;
   verified: boolean;
   photos: string[];
-  services: string[];
   workDays: string;
   workHours: string;
   languages: string[];
   price?: number;
+  createdAt: string;
 }
 
 export interface SearchHistoryItem {
@@ -205,6 +214,30 @@ export const updateUserToProvider = async (): Promise<void> => {
     }
   } catch (error) {
     console.error('Error updating user to provider:', error);
+  }
+};
+
+export const toggleProviderMode = async (isProvider: boolean): Promise<void> => {
+  try {
+    const user = await getUser();
+    if (user) {
+      user.isProvider = isProvider;
+      await saveUser(user);
+    }
+  } catch (error) {
+    console.error('Error toggling provider mode:', error);
+  }
+};
+
+export const deactivateProviderAccount = async (): Promise<void> => {
+  try {
+    const user = await getUser();
+    if (user) {
+      user.isProvider = false;
+      await saveUser(user);
+    }
+  } catch (error) {
+    console.error('Error deactivating provider account:', error);
   }
 };
 

@@ -113,10 +113,10 @@ type ProviderTabConfig = {
 };
 
 const PROVIDER_TABS: ProviderTabConfig[] = [
-  { name: 'Dashboard', label: 'Dashboard', icon: 'grid', component: ProviderDashboardScreen },
+  { name: 'Home', label: 'Home', icon: 'home', component: HomeScreen },
+  { name: 'Search', label: 'Search', icon: 'search', component: SearchScreen },
   { name: 'ProviderEnquiries', label: 'Enquiries', icon: 'mail', component: ProviderEnquiriesScreen },
   { name: 'ProviderEditProfile', label: 'Profile', icon: 'person', component: ProviderEditProfileScreen },
-  { name: 'Settings', label: 'Settings', icon: 'settings', component: SettingsScreen },
 ];
 
 const ProviderTab = createBottomTabNavigator();
@@ -226,7 +226,7 @@ const tabStyles = StyleSheet.create({
   },
   bar: {
     flexDirection: 'row',
-    width: '72%',
+    width: '85%',
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 40,
     paddingVertical: 5,

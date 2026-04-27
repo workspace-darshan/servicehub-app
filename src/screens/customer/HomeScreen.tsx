@@ -9,6 +9,8 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SERVICES } from '../../data/mockData';
 import { LocationModal } from '../../components/LocationModal';
+import { useAuth } from '../../context/AuthContext';
+import { getProviderProfile, ProviderProfile } from '../../services/storage';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_WIDTH = SCREEN_WIDTH - 36; // 18px margin on each side
@@ -35,6 +37,21 @@ const PROMOTIONAL_BANNERS = [
     title: 'Refer & Earn ₹500',
     subtitle: 'Invite friends and get rewards',
   },
+];
+
+const TRENDING = ['Pest Control', 'Carpentry', 'Painting', 'CCTV Installation', 'Geyser Repair'];
+
+const RECENT_ENQUIRIES = [
+  { id: '1', name: 'Amit Kumar', initials: 'AK', service: 'Home Plumbing', date: 'Mar 23, 2026', isNew: true },
+  { id: '2', name: 'Sana Reddy', initials: 'SR', service: 'AC Repair', date: 'Mar 22, 2026', isNew: false },
+  { id: '3', name: 'Vikram Jha', initials: 'VJ', service: 'Electrician', date: 'Mar 21, 2026', isNew: true },
+];
+
+const QUICK_ACTIONS = [
+  { icon: 'construct-outline', iconBg: '#EDE9FE', iconColor: '#7C3AED', label: 'Edit Services', screen: 'ProviderEditProfile' },
+  { icon: 'person-outline', iconBg: '#E0F2FE', iconColor: '#0284C7', label: 'Update Profile', screen: 'ProviderEditProfile' },
+  { icon: 'eye-outline', iconBg: '#DCFCE7', iconColor: '#16A34A', label: 'Public Profile', screen: '' },
+  { icon: 'share-social-outline', iconBg: '#FFE4E6', iconColor: '#E11D48', label: 'Share Profile', screen: '' },
 ];
 
 const HOW_IT_WORKS_STEPS = [
@@ -104,12 +121,33 @@ const SERVICE_ICON_MAP: Record<string, string> = {
 };
 
 export const HomeScreen = ({ navigation }: any) => {
+  const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [locationModalVisible, setLocationModalVisible] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('Palanpur, Gujarat');
+  const [providerProfile, setProviderProfile] = useState<ProviderProfile | null>(null);
   const bannerScrollRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (user?.isProvider) {
+      loadProviderProfile();
+    }
+  }, [user?.isProvider]);
+
+  const loadProviderProfile = async () => {
+    const profile = await getProviderProfile();
+    setProviderProfile(profile);
+  };
+
+  const displayName = user?.name?.split(' ')[0] || 'User';
+  const greetingText = user?.isProvider 
+    ? `Good morning, ${displayName} 👋` 
+    : `Good morning, ${displayName} 👋`;
+  const subtitleText = user?.isProvider 
+    ? providerProfile?.businessName || 'Provider Dashboard'
+    : currentLocation;
 
   // Auto-scroll banners every 3 seconds
   useEffect(() => {
@@ -142,6 +180,38 @@ export const HomeScreen = ({ navigation }: any) => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
+
+        {/* Provider Stats - Only for Providers */}
+        {user?.isProvider && (
+          <View style={styles.providerStatsSection}>
+            <View style={styles.statsRow}>
+              <View style={styles.statCard}>
+                <View style={[styles.statIcon, { backgroundColor: '#EDE9FE' }]}>
+                  <Ionicons name="mail-open-outline" size={20} color="#7C3AED" />
+                </View>
+                <Text style={styles.statValue}>5</Text>
+                <Text style={styles.statLabel}>New Enquiries</Text>
+                <Text style={styles.statSub}>THIS WEEK</Text>
+              </View>
+              <View style={styles.statCard}>
+                <View style={[styles.statIcon, { backgroundColor: '#FEF9C3' }]}>
+                  <Ionicons name="star" size={20} color="#CA8A04" />
+                </View>
+                <Text style={styles.statValue}>4.8</Text>
+                <Text style={styles.statLabel}>Rating</Text>
+                <Text style={styles.statSub}>32 REVIEWS</Text>
+              </View>
+              <View style={styles.statCard}>
+                <View style={[styles.statIcon, { backgroundColor: '#DCFCE7' }]}>
+                  <Ionicons name="eye-outline" size={20} color="#16A34A" />
+                </View>
+                <Text style={styles.statValue}>124</Text>
+                <Text style={styles.statLabel}>Profile Views</Text>
+                <Text style={styles.statSub}>THIS MONTH</Text>
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Promotional Banner Slider */}
         <View style={styles.bannerContainer}>
@@ -192,107 +262,175 @@ export const HomeScreen = ({ navigation }: any) => {
           </View>
         </View>
 
-        {/* Services Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Services</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Search', { showAllServices: true })}>
-              <Text style={styles.viewAll}>View all →</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.serviceGrid}>
-            {SERVICES.slice(0, 8).map((service, index) => {
-              const colorSet = SERVICE_COLORS[index % SERVICE_COLORS.length];
-              return (
-                <TouchableOpacity
-                  key={service.id}
-                  style={styles.serviceItem}
-                  onPress={() => navigation.navigate('Search', { service: service.name })}
-                  activeOpacity={0.7}>
-                  <View style={[styles.serviceBox, { backgroundColor: colorSet.bg }]}>
-                    <Ionicons
-                      name={(SERVICE_ICON_MAP[service.name] || 'construct-outline') as any}
-                      size={24}
-                      color={colorSet.icon}
-                    />
-                  </View>
-                  <Text style={styles.serviceLabel}>{service.name}</Text>
+        {/* Conditional Content Based on User Type */}
+        {user?.isProvider ? (
+          <>
+            {/* Recent Enquiries - Provider Only */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Recent Enquiries</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('ProviderEnquiries')}>
+                  <Text style={styles.viewAll}>View all →</Text>
                 </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
+              </View>
 
-        {/* How It Works Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>How it works</Text>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>3 easy steps</Text>
+              <View style={{ gap: 10 }}>
+                {RECENT_ENQUIRIES.map(enq => (
+                  <TouchableOpacity
+                    key={enq.id}
+                    style={styles.enquiryCard}
+                    onPress={() => navigation.navigate('ProviderEnquiries')}
+                    activeOpacity={0.7}>
+                    <View style={styles.enquiryAvatar}>
+                      <Text style={styles.enquiryAvatarText}>{enq.initials}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.enquiryName}>{enq.name}</Text>
+                      <Text style={styles.enquiryService}>{enq.service}</Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                      {enq.isNew && (
+                        <View style={styles.newBadge}>
+                          <Text style={styles.newBadgeText}>New</Text>
+                        </View>
+                      )}
+                      <Text style={styles.enquiryDate}>{enq.date}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
-          </View>
-          <View style={styles.hiwWrap}>
-            {HOW_IT_WORKS_STEPS.map((step, index) => (
-              <View key={step.num} style={styles.hiwStep}>
-                <View style={styles.hiwLeft}>
-                  <View style={[styles.hiwNum, { backgroundColor: step.color }]}>
-                    <Text style={styles.hiwNumText}>{step.num}</Text>
-                  </View>
-                  {index < HOW_IT_WORKS_STEPS.length - 1 && (
-                    <LinearGradient
-                      colors={[step.color, HOW_IT_WORKS_STEPS[index + 1].color]}
-                      style={styles.hiwLine}
-                    />
-                  )}
-                </View>
-                <View style={[
-                  styles.hiwCard,
-                  step.isDone && { backgroundColor: '#F0FDF4', borderColor: '#DCFCE7' }
-                ]}>
-                  <View style={[styles.hiwIconWrap, { backgroundColor: step.bgColor }]}>
-                    <Ionicons name={step.icon as any} size={20} color={step.color} />
-                  </View>
-                  <Text style={[styles.hiwCardTitle, step.isDone && { color: '#15803D' }]}>
-                    {step.title}
-                  </Text>
-                  <Text style={[styles.hiwCardSub, step.isDone && { color: '#1ca14dff' }]}>
-                    {step.desc}
-                  </Text>
+
+            {/* Quick Actions - Provider Only */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Quick Actions</Text>
+              <View style={styles.actionsGrid}>
+                {QUICK_ACTIONS.map(action => (
+                  <TouchableOpacity
+                    key={action.label}
+                    style={styles.actionCard}
+                    onPress={() => action.screen && navigation.navigate(action.screen)}
+                    activeOpacity={0.7}>
+                    <View style={[styles.actionIcon, { backgroundColor: action.iconBg }]}>
+                      <Ionicons name={action.icon as any} size={20} color={action.iconColor} />
+                    </View>
+                    <Text style={styles.actionLabel}>{action.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </>
+        ) : (
+          <>
+            {/* Services Section - Customer Only */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Services</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Search', { showAllServices: true })}>
+                  <Text style={styles.viewAll}>View all →</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.serviceGrid}>
+                {SERVICES.slice(0, 8).map((service, index) => {
+                  const colorSet = SERVICE_COLORS[index % SERVICE_COLORS.length];
+                  return (
+                    <TouchableOpacity
+                      key={service.id}
+                      style={styles.serviceItem}
+                      onPress={() => navigation.navigate('Search', { service: service.name })}
+                      activeOpacity={0.7}>
+                      <View style={[styles.serviceBox, { backgroundColor: colorSet.bg }]}>
+                        <Ionicons
+                          name={(SERVICE_ICON_MAP[service.name] || 'construct-outline') as any}
+                          size={24}
+                          color={colorSet.icon}
+                        />
+                      </View>
+                      <Text style={styles.serviceLabel}>{service.name}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* How It Works Section - Customer Only */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>How it works</Text>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>3 easy steps</Text>
                 </View>
               </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Why Choose Us Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Why choose us</Text>
-          </View>
-          <View style={styles.whyGrid}>
-            {WHY_CHOOSE.map((item) => (
-              <View key={item.title} style={styles.whyCard}>
-                <View style={[styles.whyIcon, { backgroundColor: item.bg }]}>
-                  <Ionicons name={item.icon as any} size={20} color={item.color} />
-                </View>
-                <Text style={styles.whyTitle}>{item.title}</Text>
-                <Text style={styles.whySub}>{item.desc}</Text>
+              <View style={styles.hiwWrap}>
+                {HOW_IT_WORKS_STEPS.map((step, index) => (
+                  <View key={step.num} style={styles.hiwStep}>
+                    <View style={styles.hiwLeft}>
+                      <View style={[styles.hiwNum, { backgroundColor: step.color }]}>
+                        <Text style={styles.hiwNumText}>{step.num}</Text>
+                      </View>
+                      {index < HOW_IT_WORKS_STEPS.length - 1 && (
+                        <LinearGradient
+                          colors={[step.color, HOW_IT_WORKS_STEPS[index + 1].color]}
+                          style={styles.hiwLine}
+                        />
+                      )}
+                    </View>
+                    <View style={[
+                      styles.hiwCard,
+                      step.isDone && { backgroundColor: '#F0FDF4', borderColor: '#DCFCE7' }
+                    ]}>
+                      <View style={[styles.hiwIconWrap, { backgroundColor: step.bgColor }]}>
+                        <Ionicons name={step.icon as any} size={20} color={step.color} />
+                      </View>
+                      <Text style={[styles.hiwCardTitle, step.isDone && { color: '#15803D' }]}>
+                        {step.title}
+                      </Text>
+                      <Text style={[styles.hiwCardSub, step.isDone && { color: '#1ca14dff' }]}>
+                        {step.desc}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
               </View>
-            ))}
-          </View>
-        </View>
+            </View>
 
-        {/* Provider Banner */}
-        <View style={styles.proBanner}>
-          <View style={styles.proIcon}>
-            <Ionicons name="lock-closed-outline" size={20} color="#fff" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.proTitle}>Are you a professional?</Text>
-            <Text style={styles.proSub}>Grow your business with Sevak</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.proBtn}
+            {/* Why Choose Us Section - Customer Only */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Why choose us</Text>
+              </View>
+              <View style={styles.whyGrid}>
+                {WHY_CHOOSE.map((item) => (
+                  <View key={item.title} style={styles.whyCard}>
+                    <View style={[styles.whyIcon, { backgroundColor: item.bg }]}>
+                      <Ionicons name={item.icon as any} size={20} color={item.color} />
+                    </View>
+                    <Text style={styles.whyTitle}>{item.title}</Text>
+                    <Text style={styles.whySub}>{item.desc}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {/* Provider Banner - Customer Only */}
+            <View style={styles.proBanner}>
+              <View style={styles.proIcon}>
+                <Ionicons name="lock-closed-outline" size={20} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.proTitle}>Are you a professional?</Text>
+                <Text style={styles.proSub}>Grow your business with Sevak</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.proBtn}
+                onPress={() => navigation.navigate('BecomeProvider')}>
+                <Text style={styles.proBtnText}>Join now →</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+
+        <View style={{ height: 20 }} />
             onPress={() => navigation.navigate('BecomeProvider')}>
             <Text style={styles.proBtnText}>Join now →</Text>
           </TouchableOpacity>
@@ -306,15 +444,19 @@ export const HomeScreen = ({ navigation }: any) => {
         {/* Top Row */}
         <View style={styles.headerTop}>
           <View>
-            <Text style={styles.greeting}>Good morning, Darshan 👋</Text>
-            <TouchableOpacity 
-              style={styles.locationRow}
-              onPress={() => setLocationModalVisible(true)}
-              activeOpacity={0.7}>
-              <Ionicons name="location" size={12} color="#FF6B00" />
-              <Text style={styles.locationText}>{currentLocation} · </Text>
-              <Text style={styles.changeText}>Change</Text>
-            </TouchableOpacity>
+            <Text style={styles.greeting}>{greetingText}</Text>
+            {user?.isProvider ? (
+              <Text style={styles.locationText}>{subtitleText}</Text>
+            ) : (
+              <TouchableOpacity 
+                style={styles.locationRow}
+                onPress={() => setLocationModalVisible(true)}
+                activeOpacity={0.7}>
+                <Ionicons name="location" size={12} color="#FF6B00" />
+                <Text style={styles.locationText}>{currentLocation} · </Text>
+                <Text style={styles.changeText}>Change</Text>
+              </TouchableOpacity>
+            )}
           </View>
           <View style={styles.headerIcons}>
             <TouchableOpacity
@@ -487,8 +629,52 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   scrollContent: {
-    paddingTop: 140,
+    paddingTop: 160,
     paddingBottom: 100,
+  },
+  providerStatsSection: {
+    paddingHorizontal: 18,
+    paddingBottom: 22,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+    alignItems: 'center',
+  },
+  statIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#0D0D0D',
+    letterSpacing: -0.5,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#0D0D0D',
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  statSub: {
+    fontSize: 9,
+    color: '#999',
+    marginTop: 2,
+    letterSpacing: 0.5,
   },
   bannerContainer: {
     position: 'relative',
@@ -772,5 +958,83 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#fff',
+  },
+  enquiryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+  },
+  enquiryAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#EDE9FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  enquiryAvatarText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#7C3AED',
+  },
+  enquiryName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0D0D0D',
+  },
+  enquiryService: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 2,
+  },
+  newBadge: {
+    backgroundColor: '#FFF4ED',
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: '#FFD4B3',
+  },
+  newBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FF6B00',
+  },
+  enquiryDate: {
+    fontSize: 10,
+    color: '#AAA',
+  },
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  actionCard: {
+    width: '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 16,
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+  },
+  actionIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0D0D0D',
+    textAlign: 'center',
   },
 });

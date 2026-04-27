@@ -1,17 +1,56 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { TopBar } from '../../components/TopBar';
+import { useAuth } from '../../context/AuthContext';
 
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
 export const SettingsScreen = ({ navigation }: any) => {
+  const { user, toggleProviderMode } = useAuth();
   const [notifs, setNotifs] = useState({
     newEnquiries: true, replies: true, promo: false, email: true,
   });
+
+  const handleToggleProviderMode = async () => {
+    if (user?.isProvider) {
+      // Deactivate provider account
+      Alert.alert(
+        'Deactivate Provider Account',
+        'Are you sure you want to switch back to customer mode? Your provider profile will be saved.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Deactivate',
+            style: 'destructive',
+            onPress: async () => {
+              await toggleProviderMode(false);
+              Alert.alert('Success', 'Switched to customer mode');
+            },
+          },
+        ]
+      );
+    } else {
+      // Activate provider account
+      Alert.alert(
+        'Activate Provider Account',
+        'Switch to provider mode to receive enquiries and manage your services.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Activate',
+            onPress: async () => {
+              await toggleProviderMode(true);
+              Alert.alert('Success', 'Switched to provider mode');
+            },
+          },
+        ]
+      );
+    }
+  };
 
   const ToggleRow = ({ icon, label, value, onToggle, last }: any) => (
     <View style={[styles.row, last && { borderBottomWidth: 0 }]}>
@@ -71,6 +110,30 @@ export const SettingsScreen = ({ navigation }: any) => {
 
         <Text style={styles.sectionTitle}>ACCOUNT</Text>
         <View style={styles.rowGroup}>
+          {user?.isProvider && (
+            <TouchableOpacity 
+              style={styles.row}
+              onPress={handleToggleProviderMode}
+              activeOpacity={0.65}>
+              <View style={[styles.rowIcon, { backgroundColor: '#FEE2E2' }]}>
+                <Ionicons name="business-outline" size={18} color="#E11D48" />
+              </View>
+              <Text style={[styles.rowLabel, { color: '#E11D48' }]}>Deactivate Provider Account</Text>
+              <Ionicons name="chevron-forward" size={16} color="#888" />
+            </TouchableOpacity>
+          )}
+          {!user?.isProvider && (
+            <TouchableOpacity 
+              style={styles.row}
+              onPress={handleToggleProviderMode}
+              activeOpacity={0.65}>
+              <View style={[styles.rowIcon, { backgroundColor: '#DCFCE7' }]}>
+                <Ionicons name="business-outline" size={18} color="#16A34A" />
+              </View>
+              <Text style={[styles.rowLabel, { color: '#16A34A' }]}>Activate Provider Account</Text>
+              <Ionicons name="chevron-forward" size={16} color="#888" />
+            </TouchableOpacity>
+          )}
           <NavRow icon="lock-closed-outline" label="Change Password" />
           <NavRow icon="logo-google" label="Linked Accounts" value="Google" />
           <NavRow icon="warning-outline" label="Delete Account" danger last />

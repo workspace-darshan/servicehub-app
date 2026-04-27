@@ -8,6 +8,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { TopBar } from '../../components/TopBar';
 import { SERVICES } from '../../data/mockData';
+import { useAuth } from '../../context/AuthContext';
+import { saveProviderProfile, ProviderProfile } from '../../services/storage';
 
 const INDIAN_CITIES = ['Palanpur', 'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Gandhinagar', 'Mumbai', 'Pune', 'Delhi', 'Jaipur', 'Chandigarh', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata'];
 const INDIAN_STATES = ['Gujarat', 'Maharashtra', 'Delhi', 'Karnataka', 'Rajasthan', 'Uttar Pradesh', 'Tamil Nadu', 'West Bengal', 'Punjab', 'Haryana', 'Telangana'];
@@ -70,6 +72,7 @@ const PickerRow = ({ value, placeholder, options, onSelect }: any) => {
 
 // ── Main Screen ───────────────────────────────────────────
 export const BecomeProviderScreen = ({ navigation }: any) => {
+  const { user, toggleProviderMode } = useAuth();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [successVisible, setSuccessVisible] = useState(false);
@@ -101,9 +104,51 @@ export const BecomeProviderScreen = ({ navigation }: any) => {
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!user) return;
+    
     setLoading(true);
-    setTimeout(() => { setLoading(false); setSuccessVisible(true); }, 1800);
+    
+    try {
+      // Create provider profile
+      const providerProfile: ProviderProfile = {
+        userId: user.id,
+        businessName,
+        description,
+        address: {
+          street,
+          city,
+          state,
+          zipCode,
+          googleMapsLink: addressLink,
+        },
+        services: selectedServices,
+        serviceArea,
+        serviceRadius,
+        rating: 0,
+        reviews: 0,
+        verified: false,
+        photos: [],
+        workDays: 'Mon - Sat',
+        workHours: '9:00 AM - 6:00 PM',
+        languages: ['English', 'Hindi', 'Gujarati'],
+        createdAt: new Date().toISOString(),
+      };
+
+      // Save provider profile to storage
+      await saveProviderProfile(providerProfile);
+      
+      // Update user to provider mode
+      await toggleProviderMode(true);
+      
+      setTimeout(() => {
+        setLoading(false);
+        setSuccessVisible(true);
+      }, 1000);
+    } catch (error) {
+      console.error('Error submitting provider form:', error);
+      setLoading(false);
+    }
   };
 
   // ── Step renderers ──────────────────────────────────────
