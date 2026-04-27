@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "ServiceHub",
-    "slug": "servicehub",
+    "slug": "sevak",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -29,8 +29,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "662455a4-ffb0-454e-adf4-db3030a6c2ca"
+        "projectId": "22f647f9-af6b-4984-9578-e7865e85b8b1"
       }
-    }
+    },
+    "owner": "darshanmevadas-organization"
   }
 }
