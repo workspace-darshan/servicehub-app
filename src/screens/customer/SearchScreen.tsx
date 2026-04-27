@@ -8,6 +8,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SERVICES, PROVIDERS } from '../../data/mockData';
 
+const { height } = Dimensions.get('window');
+
+const SHEET_HEIGHT = height * 0.75;
+const SHEET_EXPANDED_HEIGHT = height * 0.95;
+
 const screenWidth = Dimensions.get('window').width;
 const numColumns = 5;
 const horizontalPadding = 36;
@@ -16,11 +21,9 @@ const totalGaps = gap * (numColumns - 1);
 const availableWidth = screenWidth - horizontalPadding - totalGaps;
 const itemWidth = Math.floor(availableWidth / numColumns);
 
-const CATEGORIES = ['All', 'Repair', 'Cleaning', 'Installation', 'Other'];
 const CITIES = ['All Cities', 'Palanpur', 'Ahmedabad', 'Surat', 'Rajkot', 'Vadodara'];
 const MIN_RATINGS = [0, 4.0, 4.5, 4.8];
 const EXP_OPTIONS = [0, 2, 5, 10];
-const SHEET_HEIGHT = 480;
 
 const SERVICE_ICON_MAP: Record<string, string> = {
   Plumbing: 'water-outline', Electrical: 'flash-outline', Cleaning: 'sparkles-outline',
@@ -48,7 +51,7 @@ const SERVICE_COLORS = [
 
 const MAX_RECENT = 8;
 
-const DEFAULT_RECENT = ['Plumbing', 'AC Repair', 'Electrician', 'House Cleaning'];
+const DEFAULT_RECENT: string[] = [];
 
 const TRENDING = ['Pest Control', 'Carpentry', 'Painting', 'CCTV Installation', 'Geyser Repair'];
 
@@ -72,6 +75,7 @@ export const SearchScreen = ({ navigation, route }: any) => {
   const [draftRating, setDraftRating] = useState(0);
   const [draftExp, setDraftExp] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [citySearch, setCitySearch] = useState('');
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
 
   const searchRef = useRef<any>(null);
@@ -81,16 +85,45 @@ export const SearchScreen = ({ navigation, route }: any) => {
     selectedCity !== 'All Cities', verifiedOnly, minRating > 0, minExp > 0,
   ].filter(Boolean).length;
 
+  const [isExpanded, setIsExpanded] = useState(false);
+  const sheetHeight = useRef(new Animated.Value(SHEET_HEIGHT)).current;
+
   const openSheet = () => {
     setDraftCity(selectedCity); setDraftVerified(verifiedOnly);
     setDraftRating(minRating); setDraftExp(minExp);
     setSheetOpen(true);
+    setIsExpanded(false);
     Animated.spring(translateY, { toValue: 0, useNativeDriver: true, tension: 65, friction: 11 }).start();
+    sheetHeight.setValue(SHEET_HEIGHT);
   };
 
   const closeSheet = () => {
     Animated.timing(translateY, { toValue: SHEET_HEIGHT, duration: 280, useNativeDriver: true })
-      .start(() => setSheetOpen(false));
+      .start(() => {
+        setSheetOpen(false);
+        setIsExpanded(false);
+        sheetHeight.setValue(SHEET_HEIGHT);
+      });
+  };
+
+  const expandSheet = () => {
+    setIsExpanded(true);
+    Animated.spring(sheetHeight, { 
+      toValue: SHEET_EXPANDED_HEIGHT, 
+      useNativeDriver: false,
+      tension: 65,
+      friction: 11
+    }).start();
+  };
+
+  const collapseSheet = () => {
+    setIsExpanded(false);
+    Animated.spring(sheetHeight, { 
+      toValue: SHEET_HEIGHT, 
+      useNativeDriver: false, 
+      tension: 65, 
+      friction: 11 
+    }).start();
   };
 
   const applyFilters = () => {
@@ -107,10 +140,60 @@ export const SearchScreen = ({ navigation, route }: any) => {
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: (_, g) => { if (g.dy > 0) translateY.setValue(g.dy); },
+      onPanResponderMove: (_, g) => {
+        if (isExpanded) {
+          // When expanded, only allow dragging down to collapse
+          if (g.dy > 0) {
+            const newHeight = SHEET_EXPANDED_HEIGHT - g.dy;
+            if (newHeight >= SHEET_HEIGHT) {
+              sheetHeight.setValue(newHeight);
+            }
+          }
+        } else {
+          // When collapsed, allow dragging up to expand or down to close
+          if (g.dy < 0) {
+            // Dragging up to expand
+            const newHeight = SHEET_HEIGHT + Math.abs(g.dy);
+            if (newHeight <= SHEET_EXPANDED_HEIGHT) {
+              sheetHeight.setValue(newHeight);
+            }
+          } else if (g.dy > 0) {
+            // Dragging down to close
+            translateY.setValue(g.dy);
+          }
+        }
+      },
       onPanResponderRelease: (_, g) => {
-        if (g.dy > 80) closeSheet();
-        else Animated.spring(translateY, { toValue: 0, useNativeDriver: true }).start();
+        if (isExpanded) {
+          // When expanded, check if dragging down enough to collapse
+          if (g.dy > 100) {
+            collapseSheet();
+          } else {
+            // Snap back to expanded
+            Animated.spring(sheetHeight, { 
+              toValue: SHEET_EXPANDED_HEIGHT, 
+              useNativeDriver: false 
+            }).start();
+          }
+        } else {
+          // When collapsed
+          if (g.dy < -100) {
+            // Dragged up enough to expand
+            expandSheet();
+          } else if (g.dy > 80) {
+            // Dragged down enough to close
+            closeSheet();
+          } else if (g.dy < 0) {
+            // Snap back to collapsed height
+            Animated.spring(sheetHeight, { 
+              toValue: SHEET_HEIGHT, 
+              useNativeDriver: false 
+            }).start();
+          } else {
+            // Snap back to collapsed position
+            Animated.spring(translateY, { toValue: 0, useNativeDriver: true }).start();
+          }
+        }
       },
     })
   ).current;
@@ -123,7 +206,10 @@ export const SearchScreen = ({ navigation, route }: any) => {
       setSearch(route.params.service);
       addRecent(route.params.service);
     }
-  }, [route?.params?.focus, route?.params?.service]);
+    if (route?.params?.showAllServices) {
+      setShowAllServices(true);
+    }
+  }, [route?.params?.focus, route?.params?.service, route?.params?.showAllServices]);
 
   const addRecent = (term: string) => {
     if (!term.trim()) return;
@@ -135,6 +221,12 @@ export const SearchScreen = ({ navigation, route }: any) => {
 
   const removeRecent = (term: string) => {
     setRecentSearches(prev => prev.filter(r => r !== term));
+    // Keep the input focused to prevent panel from closing
+    setTimeout(() => {
+      if (searchRef.current) {
+        searchRef.current.focus();
+      }
+    }, 50);
   };
 
   const handleSubmit = () => {
@@ -147,6 +239,7 @@ export const SearchScreen = ({ navigation, route }: any) => {
   const applySearch = (term: string) => {
     setSearch(term);
     addRecent(term);
+    setIsFocused(false);
     searchRef.current?.blur();
   };
 
@@ -202,7 +295,9 @@ export const SearchScreen = ({ navigation, route }: any) => {
             value={search}
             onChangeText={setSearch}
             onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            onBlur={() => {
+              setTimeout(() => setIsFocused(false), 200);
+            }}
             onSubmitEditing={handleSubmit}
             returnKeyType="search"
           />
@@ -234,35 +329,61 @@ export const SearchScreen = ({ navigation, route }: any) => {
 
       {/* Recent searches panel — shown when focused + empty */}
       {showRecentPanel && (
-        <View style={styles.recentPanel}>
-          {recentSearches.length > 0 && (
+        <View 
+          style={styles.recentPanel}
+          onStartShouldSetResponder={() => true}
+          onResponderRelease={() => false}>
+          <View style={styles.recentHeader}>
+            <Text style={styles.recentLabel}>Recent</Text>
+            {recentSearches.length > 0 && (
+              <TouchableOpacity 
+                onPressIn={(e) => {
+                  e.stopPropagation();
+                  setRecentSearches([]);
+                  // Keep the input focused to prevent panel from closing
+                  setTimeout(() => {
+                    if (searchRef.current) {
+                      searchRef.current.focus();
+                    }
+                  }, 50);
+                }}
+                activeOpacity={0.7}>
+                <Text style={styles.clearAll}>Clear all</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          {recentSearches.length > 0 ? (
             <>
-              <View style={styles.recentHeader}>
-                <Text style={styles.recentLabel}>Recent</Text>
-                <TouchableOpacity onPress={() => setRecentSearches([])}>
-                  <Text style={styles.clearAll}>Clear all</Text>
-                </TouchableOpacity>
-              </View>
               {recentSearches.map(term => (
-                <TouchableOpacity
-                  key={term}
-                  style={styles.recentRow}
-                  onPress={() => applySearch(term)}
-                  activeOpacity={0.7}>
-                  <Ionicons name="time-outline" size={15} color="#AAAAAA" />
-                  <Text style={styles.recentTerm}>{term}</Text>
+                <View key={term} style={styles.recentRow}>
                   <TouchableOpacity
-                    onPress={() => removeRecent(term)}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}
+                    onPressIn={(e) => {
+                      e.stopPropagation();
+                      applySearch(term);
+                    }}
+                    activeOpacity={0.7}>
+                    <Ionicons name="time-outline" size={15} color="#AAAAAA" />
+                    <Text style={styles.recentTerm}>{term}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPressIn={(e) => {
+                      e.stopPropagation();
+                      removeRecent(term);
+                    }}
+                    activeOpacity={0.7}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                     <Ionicons name="close" size={14} color="#CCCCCC" />
                   </TouchableOpacity>
-                </TouchableOpacity>
+                </View>
               ))}
             </>
+          ) : (
+            <Text style={styles.noRecentText}>No recent searches</Text>
           )}
 
           {/* Trending */}
-          <View style={[styles.recentHeader, { marginTop: recentSearches.length > 0 ? 12 : 0 }]}>
+          <View style={[styles.recentHeader, { marginTop: 12 }]}>
             <Text style={styles.recentLabel}>Trending</Text>
           </View>
           <View style={styles.trendingWrap}>
@@ -270,7 +391,11 @@ export const SearchScreen = ({ navigation, route }: any) => {
               <TouchableOpacity
                 key={term}
                 style={styles.trendingChip}
-                onPress={() => applySearch(term)}>
+                onPressIn={(e) => {
+                  e.stopPropagation();
+                  applySearch(term);
+                }}
+                activeOpacity={0.7}>
                 <Ionicons name="trending-up-outline" size={12} color="#FF6B00" />
                 <Text style={styles.trendingText}>{term}</Text>
               </TouchableOpacity>
@@ -286,20 +411,6 @@ export const SearchScreen = ({ navigation, route }: any) => {
         {/* Category chips + Services — only when no search active */}
         {search.length === 0 && (
           <>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.catRow}>
-              {CATEGORIES.map(cat => (
-                <TouchableOpacity
-                  key={cat}
-                  style={[styles.catChip, category === cat && styles.catChipActive]}
-                  onPress={() => setCategory(cat)}>
-                  <Text style={[styles.catText, category === cat && styles.catTextActive]}>{cat}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Services</Text>
@@ -390,7 +501,7 @@ export const SearchScreen = ({ navigation, route }: any) => {
       {/* Filter bottom sheet */}
       <Modal transparent visible={sheetOpen} animationType="none" onRequestClose={closeSheet}>
         <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeSheet} />
-        <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
+        <Animated.View style={[styles.sheet, { height: sheetHeight, transform: [{ translateY }] }]}>
           <View {...panResponder.panHandlers} style={styles.dragArea}>
             <View style={styles.handle} />
           </View>
@@ -402,8 +513,28 @@ export const SearchScreen = ({ navigation, route }: any) => {
           </View>
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.sheetBody}>
             <Text style={styles.filterLabel}>CITY</Text>
+            
+            {/* City Search Input */}
+            <View style={styles.citySearchRow}>
+              <Ionicons name="search-outline" size={16} color="#888" />
+              <TextInput
+                style={styles.citySearchInput}
+                placeholder="Search city..."
+                placeholderTextColor="#AAA"
+                value={citySearch}
+                onChangeText={setCitySearch}
+              />
+              {citySearch.length > 0 && (
+                <TouchableOpacity onPress={() => setCitySearch('')}>
+                  <Ionicons name="close-circle" size={16} color="#888" />
+                </TouchableOpacity>
+              )}
+            </View>
+
             <View style={styles.chipWrap}>
-              {CITIES.map(c => (
+              {CITIES.filter(c => 
+                c.toLowerCase().includes(citySearch.toLowerCase())
+              ).map(c => (
                 <TouchableOpacity
                   key={c}
                   style={[styles.filterChip, draftCity === c && styles.filterChipActive]}
@@ -525,7 +656,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scroll: { paddingBottom: 20 },
+  scroll: { paddingTop: 16, paddingBottom: 20 },
   catRow: {
     flexDirection: 'row',
     gap: 7,
@@ -559,15 +690,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#0D0D0D',
     letterSpacing: -0.3,
-    marginBottom: 10,
   },
   viewAllBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    backgroundColor: '#FFF4ED',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#FFD4B3',
   },
   viewAllText: { fontSize: 11, fontWeight: '600', color: '#FF6B00' },
   serviceRow: {
@@ -668,6 +792,12 @@ const styles = StyleSheet.create({
     paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: '#F5F4F0',
   },
   recentTerm: { flex: 1, fontSize: 13, color: '#0D0D0D', fontWeight: '500' },
+  noRecentText: { 
+    fontSize: 13, 
+    color: '#999', 
+    textAlign: 'center', 
+    paddingVertical: 20 
+  },
   trendingWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   trendingChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -695,7 +825,7 @@ const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)' },
   sheet: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    height: SHEET_HEIGHT, backgroundColor: '#FFFFFF',
+    height: height * 0.75, backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden',
   },
   dragArea: { width: '100%', paddingVertical: 12, alignItems: 'center' },
@@ -712,6 +842,25 @@ const styles = StyleSheet.create({
     fontSize: 10, fontWeight: '700', color: '#AAAAAA',
     textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10,
   },
+  citySearchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F4F0',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+    gap: 8,
+  },
+  citySearchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: '#0D0D0D',
+    padding: 0,
+    outlineStyle: 'none',
+  } as any,
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   filterChip: {
     flexDirection: 'row', alignItems: 'center', gap: 4,

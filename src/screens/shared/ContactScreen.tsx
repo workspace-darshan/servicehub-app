@@ -12,7 +12,7 @@ const SUBJECTS = ['General', 'Provider Issue', 'Technical', 'Billing', 'Other'];
 
 const CONTACT_ITEMS = [
   { icon: 'call-outline', label: 'Phone', value: '(+91) 0192-181272', tappable: true },
-  { icon: 'mail-outline', label: 'Email', value: 'hello@sevek.in', tappable: true },
+  { icon: 'mail-outline', label: 'Email', value: 'hello@Sevak.in', tappable: true },
   { icon: 'location-outline', label: 'Address', value: 'Palanpur, Banaskantha, Gujarat 385001', tappable: false },
 ];
 

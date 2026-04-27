@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import { Colors } from '../constants/theme';
+import { useAuth } from '../context/AuthContext';
 
 // Auth
 import { SplashScreen } from '../screens/auth/SplashScreen';
@@ -60,7 +62,7 @@ function CustomerTabBar({ state, descriptors, navigation }: any) {
 
   return (
     <View style={[tabStyles.barWrapper, { bottom: insets.bottom + 16 }]}>
-      <View style={tabStyles.bar}>
+      <BlurView intensity={100} tint="light" style={tabStyles.bar}>
         {state.routes.map((route: any, index: number) => {
           const isActive = state.index === index;
           const tab = CUSTOMER_TABS[index];
@@ -73,7 +75,7 @@ function CustomerTabBar({ state, descriptors, navigation }: any) {
               <View style={[tabStyles.iconWrap, isActive && tabStyles.iconWrapActive]}>
                 <Ionicons
                   name={isActive ? tab.icon : `${tab.icon}-outline`}
-                  size={20}
+                  size={18}
                   color={isActive ? '#FF6B00' : '#888'}
                 />
               </View>
@@ -83,7 +85,7 @@ function CustomerTabBar({ state, descriptors, navigation }: any) {
             </TouchableOpacity>
           );
         })}
-      </View>
+      </BlurView>
     </View>
   );
 }
@@ -124,7 +126,7 @@ function ProviderTabBar({ state, descriptors, navigation }: any) {
 
   return (
     <View style={[tabStyles.barWrapper, { bottom: insets.bottom + 16 }]}>
-      <View style={tabStyles.bar}>
+      <BlurView intensity={100} tint="light" style={tabStyles.bar}>
         {state.routes.map((route: any, index: number) => {
           const isActive = state.index === index;
           const tab = PROVIDER_TABS[index];
@@ -147,7 +149,7 @@ function ProviderTabBar({ state, descriptors, navigation }: any) {
             </TouchableOpacity>
           );
         })}
-      </View>
+      </BlurView>
     </View>
   );
 }
@@ -170,10 +172,20 @@ function ProviderTabs() {
 const RootStack = createStackNavigator();
 
 export function RootNavigator() {
+  const { user, isLoading, isAuthenticated } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F4F0' }}>
+        <ActivityIndicator size="large" color="#FF6B00" />
+      </View>
+    );
+  }
+
   return (
     <RootStack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName="Splash">
+      initialRouteName={isAuthenticated ? (user?.isProvider ? 'ProviderTabs' : 'CustomerTabs') : 'Splash'}>
       {/* Auth */}
       <RootStack.Screen name="Splash" component={SplashScreen} />
       <RootStack.Screen name="Onboarding" component={OnboardingScreen} />
@@ -215,9 +227,9 @@ const tabStyles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
     width: '72%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 40,
-    paddingVertical: 10,
+    paddingVertical: 5,
     paddingHorizontal: 8,
     alignItems: 'center',
     shadowColor: '#000',
@@ -227,6 +239,7 @@ const tabStyles = StyleSheet.create({
     elevation: 12,
     borderWidth: 1,
     borderColor: '#ECECEC',
+    overflow: 'hidden',
   },
   tabItem: {
     flex: 1,
@@ -235,8 +248,8 @@ const tabStyles = StyleSheet.create({
     gap: 3,
   },
   iconWrap: {
-    width: 38,
-    height: 38,
+    width: 30,
+    height: 30,
     borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',

@@ -1,4 +1,4 @@
-// Sevek Design System — Color Tokens
+// Sevak Design System — Color Tokens
 export const Colors = {
   // Primary
   primary: '#1D4ED8',

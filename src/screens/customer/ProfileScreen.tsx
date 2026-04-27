@@ -16,7 +16,7 @@ const ACCOUNT_ROWS = [
 
 const GENERAL_ROWS = [
   { icon: 'help-circle-outline',        label: 'How It Works',      screen: 'HowItWorks' },
-  { icon: 'information-circle-outline', label: 'About Sevek',       screen: 'About' },
+  { icon: 'information-circle-outline', label: 'About Sevak',       screen: 'About' },
   { icon: 'shield-outline',             label: 'Privacy Policy',    screen: 'PrivacyPolicy' },
   { icon: 'call-outline',               label: 'Contact Support',   screen: 'Contact' },
 ];
@@ -132,7 +132,7 @@ export const ProfileScreen = ({ navigation }: any) => {
             <Text style={styles.logoutText}>Log Out</Text>
           </TouchableOpacity>
 
-          <Text style={styles.version}>Sevek v1.0.0</Text>
+          <Text style={styles.version}>Sevak v1.0.0</Text>
         </View>
       </ScrollView>
     </View>

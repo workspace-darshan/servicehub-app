@@ -1,27 +1,75 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  KeyboardAvoidingView, Platform, ActivityIndicator, TextInput,
+  KeyboardAvoidingView, Platform, ActivityIndicator, TextInput, Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius } from '../../constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../../context/AuthContext';
 
 export const LoginScreen = ({ navigation }: any) => {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [errors, setErrors] = useState({ email: '', password: '' });
   const insets = useSafeAreaInsets();
 
-  const handleLogin = () => {
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleLogin = async () => {
+    // Reset errors
+    setErrors({ email: '', password: '' });
+
+    // Validation
+    let hasError = false;
+    const newErrors = { email: '', password: '' };
+
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+      hasError = true;
+    } else if (!validateEmail(email)) {
+      newErrors.email = 'Please enter a valid email';
+      hasError = true;
+    }
+
+    if (!password.trim()) {
+      newErrors.password = 'Password is required';
+      hasError = true;
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+      hasError = true;
+    }
+
+    if (hasError) {
+      setErrors(newErrors);
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
+    
+    try {
+      const result = await login(email.trim().toLowerCase(), password);
+      
+      if (result.success) {
+        // Navigation will be handled automatically by RootNavigator
+        // But we need to trigger it by navigating to the appropriate screen
+        navigation.replace('CustomerTabs');
+      } else {
+        Alert.alert('Login Failed', result.error || 'Invalid email or password');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+    } finally {
       setLoading(false);
-      navigation.replace('CustomerTabs');
-    }, 1500);
+    }
   };
 
   return (
@@ -47,7 +95,7 @@ export const LoginScreen = ({ navigation }: any) => {
         {/* Email */}
         <View style={styles.fieldWrapper}>
           <Text style={styles.fieldLabel}>EMAIL</Text>
-          <View style={styles.inputRow}>
+          <View style={[styles.inputRow, errors.email && styles.inputRowError]}>
             <Ionicons name="mail-outline" size={18} color={Colors.slate400} style={styles.inputIcon} />
             <TextInput
               placeholder="your@email.com"
@@ -55,29 +103,37 @@ export const LoginScreen = ({ navigation }: any) => {
               keyboardType="email-address"
               autoCapitalize="none"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (errors.email) setErrors({ ...errors, email: '' });
+              }}
               style={styles.bareInput}
             />
           </View>
+          {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
         </View>
 
         {/* Password */}
         <View style={styles.fieldWrapper}>
           <Text style={styles.fieldLabel}>PASSWORD</Text>
-          <View style={styles.inputRow}>
+          <View style={[styles.inputRow, errors.password && styles.inputRowError]}>
             <Ionicons name="lock-closed-outline" size={18} color={Colors.slate400} style={styles.inputIcon} />
             <TextInput
               placeholder="Enter your password"
               placeholderTextColor={Colors.slate400}
               secureTextEntry={!showPassword}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errors.password) setErrors({ ...errors, password: '' });
+              }}
               style={styles.bareInput}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
               <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={18} color={Colors.slate400} />
             </TouchableOpacity>
           </View>
+          {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
         </View>
 
         {/* Remember + Forgot */}
@@ -97,9 +153,9 @@ export const LoginScreen = ({ navigation }: any) => {
 
         {/* Sign In Button */}
         <TouchableOpacity
-          style={[styles.primaryBtn, loading && { opacity: 0.7 }]}
+          style={[styles.primaryBtn, (loading || !email || !password) && { opacity: 0.6 }]}
           onPress={handleLogin}
-          disabled={loading}
+          disabled={loading || !email || !password}
           activeOpacity={0.85}>
           {loading
             ? <ActivityIndicator color={Colors.white} size="small" />
@@ -149,15 +205,28 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8,
   },
   inputRow: {
-    flexDirection: 'row', alignItems: 'center',
-    borderWidth: 1.5, borderColor: Colors.border, borderRadius: BorderRadius.md,
-    backgroundColor: Colors.white, paddingHorizontal: 14, height: 48,
+    flexDirection: 'row', 
+    alignItems: 'center',
+    borderWidth: 1.5, 
+    borderColor: Colors.border, 
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.white, 
+    paddingLeft: 14,
+    paddingRight: 14,
+    height: 48,
   },
-  inputIcon: { marginRight: 10 },
+  inputIcon: { 
+    marginRight: 10,
+  },
   bareInput: {
-    flex: 1, fontSize: FontSize.base, color: Colors.darkNavy,
-    borderWidth: 0, height: 48, padding: 0, backgroundColor: 'transparent',
-  },
+    flex: 1, 
+    fontSize: FontSize.base, 
+    color: Colors.darkNavy,
+    height: 48, 
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    outlineStyle: 'none',
+  } as any,
   eyeBtn: { padding: 4 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   rememberRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -185,4 +254,14 @@ const styles = StyleSheet.create({
   registerRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 24 },
   registerLabel: { fontSize: FontSize.base, color: Colors.slate500 },
   registerLink: { fontSize: FontSize.base, color: Colors.primary, fontWeight: FontWeight.bold },
+  inputRowError: {
+    borderColor: '#EF4444',
+    borderWidth: 2,
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#EF4444',
+    marginTop: 4,
+    marginLeft: 4,
+  },
 });

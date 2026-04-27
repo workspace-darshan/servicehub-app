@@ -9,10 +9,13 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Colors } from '../../constants/theme';
+import { useAuth } from '../../context/AuthContext';
+import { getHasSeenOnboarding } from '../../services/storage';
 
 const { height } = Dimensions.get('window');
 
 export const SplashScreen = ({ navigation }: any) => {
+  const { isAuthenticated, user } = useAuth();
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const logoTranslateY = useRef(new Animated.Value(20)).current;
   const subtitleOpacity = useRef(new Animated.Value(0)).current;
@@ -72,12 +75,28 @@ export const SplashScreen = ({ navigation }: any) => {
     }, 400);
 
     // Navigate after 2.5 seconds
-    const timer = setTimeout(() => {
-      navigation.replace('Onboarding');
+    const timer = setTimeout(async () => {
+      // Check if user is already logged in
+      if (isAuthenticated && user) {
+        // Navigate to appropriate home screen
+        if (user.isProvider) {
+          navigation.replace('ProviderTabs');
+        } else {
+          navigation.replace('CustomerTabs');
+        }
+      } else {
+        // Check if user has seen onboarding
+        const hasSeenOnboarding = await getHasSeenOnboarding();
+        if (hasSeenOnboarding) {
+          navigation.replace('Login');
+        } else {
+          navigation.replace('Onboarding');
+        }
+      }
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [isAuthenticated, user]);
 
   const spin = loaderRotation.interpolate({
     inputRange: [0, 1],
@@ -105,7 +124,7 @@ export const SplashScreen = ({ navigation }: any) => {
             transform: [{ translateY: logoTranslateY }],
             alignItems: 'center',
           }}>
-          <Text style={styles.logo}>Sevek</Text>
+          <Text style={styles.logo}>Sevak</Text>
         </Animated.View>
 
         {/* Subtitle */}
@@ -129,7 +148,7 @@ export const SplashScreen = ({ navigation }: any) => {
 
       {/* Version */}
       <View style={styles.footer}>
-        <Text style={styles.version}>v1.0.0 · Sevek Technologies © 2024</Text>
+        <Text style={styles.version}>v1.0.0 · Sevak Technologies © 2024</Text>
       </View>
     </LinearGradient>
   );

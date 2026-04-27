@@ -79,7 +79,7 @@ export const SettingsScreen = ({ navigation }: any) => {
         <View style={styles.appInfo}>
           <View style={styles.logoRow}>
             <Ionicons name="flash" size={15} color="#FF6B00" />
-            <Text style={styles.appName}>Sevek</Text>
+            <Text style={styles.appName}>Sevak</Text>
           </View>
           <Text style={styles.version}>v1.0.0 · Build 100</Text>
           <View style={styles.links}>

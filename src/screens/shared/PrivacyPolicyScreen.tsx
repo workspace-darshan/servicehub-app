@@ -32,7 +32,7 @@ const SECTIONS = [
     id: '4',
     icon: 'location-outline' as const,
     title: 'Location Data',
-    content: `Sevek uses your location to show relevant service providers near you. Location data is only collected when you grant permission through your device settings.\n\nYou can disable location access at any time through your device settings, though this may limit some features of the app. We do not share precise location data with third parties without your explicit consent.`,
+    content: `Sevak uses your location to show relevant service providers near you. Location data is only collected when you grant permission through your device settings.\n\nYou can disable location access at any time through your device settings, though this may limit some features of the app. We do not share precise location data with third parties without your explicit consent.`,
   },
   {
     id: '5',
@@ -50,7 +50,7 @@ const SECTIONS = [
     id: '7',
     icon: 'person-outline' as const,
     title: 'Your Rights',
-    content: `You have the right to:\n\n• Access the personal information we hold about you\n• Correct inaccurate or incomplete information\n• Request deletion of your personal data\n• Opt out of marketing communications at any time\n• Withdraw consent for data processing where applicable\n\nTo exercise any of these rights, contact us at privacy@sevek.in or through the Contact Support section in the app.`,
+    content: `You have the right to:\n\n• Access the personal information we hold about you\n• Correct inaccurate or incomplete information\n• Request deletion of your personal data\n• Opt out of marketing communications at any time\n• Withdraw consent for data processing where applicable\n\nTo exercise any of these rights, contact us at privacy@Sevak.in or through the Contact Support section in the app.`,
   },
   {
     id: '8',
@@ -62,13 +62,13 @@ const SECTIONS = [
     id: '9',
     icon: 'people-outline' as const,
     title: "Children's Privacy",
-    content: `Sevek is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from children. If we become aware that a child has provided us with personal information, we will take steps to delete such information promptly.\n\nIf you believe a child has provided us with their information, please contact us immediately at privacy@sevek.in.`,
+    content: `Sevak is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from children. If we become aware that a child has provided us with personal information, we will take steps to delete such information promptly.\n\nIf you believe a child has provided us with their information, please contact us immediately at privacy@Sevak.in.`,
   },
   {
     id: '10',
     icon: 'refresh-outline' as const,
     title: 'Changes to This Policy',
-    content: `We may update this Privacy Policy from time to time. We will notify you of significant changes by sending a notification through the app or by email. Your continued use of Sevek after changes are posted constitutes your acceptance of the updated policy.\n\nWe encourage you to review this policy periodically to stay informed about how we protect your information.`,
+    content: `We may update this Privacy Policy from time to time. We will notify you of significant changes by sending a notification through the app or by email. Your continued use of Sevak after changes are posted constitutes your acceptance of the updated policy.\n\nWe encourage you to review this policy periodically to stay informed about how we protect your information.`,
   },
 ];
 
@@ -119,7 +119,7 @@ export const PrivacyPolicyScreen = ({ navigation }: any) => {
           </View>
           <Text style={styles.heroTitle}>Your Privacy Matters</Text>
           <Text style={styles.heroSubtitle}>
-            Sevek is committed to protecting your personal information and being transparent about how we use it.
+            Sevak is committed to protecting your personal information and being transparent about how we use it.
           </Text>
           <View style={styles.updatedBadge}>
             <Ionicons name="time-outline" size={12} color="#888" />
@@ -158,7 +158,7 @@ export const PrivacyPolicyScreen = ({ navigation }: any) => {
           <Ionicons name="mail-outline" size={20} color="#FF6B00" />
           <View style={{ flex: 1 }}>
             <Text style={styles.contactTitle}>Questions about this policy?</Text>
-            <Text style={styles.contactSub}>privacy@sevek.in</Text>
+            <Text style={styles.contactSub}>privacy@Sevak.in</Text>
           </View>
           <TouchableOpacity
             style={styles.contactBtn}
@@ -167,7 +167,7 @@ export const PrivacyPolicyScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.footer}>© 2026 Sevek Technologies. All rights reserved.</Text>
+        <Text style={styles.footer}>© 2026 Sevak Technologies. All rights reserved.</Text>
       </ScrollView>
     </View>
   );

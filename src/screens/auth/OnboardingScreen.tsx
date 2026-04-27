@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/theme';
+import { setHasSeenOnboarding } from '../../services/storage';
 
 const { height } = Dimensions.get('window');
 
@@ -59,6 +60,21 @@ export const OnboardingScreen = ({ navigation }: any) => {
     }
   };
 
+  const handleSkip = async () => {
+    await setHasSeenOnboarding();
+    navigation.navigate('Login');
+  };
+
+  const handleGetStarted = async () => {
+    await setHasSeenOnboarding();
+    navigation.navigate('Register');
+  };
+
+  const handleLogin = async () => {
+    await setHasSeenOnboarding();
+    navigation.navigate('Login');
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -66,7 +82,7 @@ export const OnboardingScreen = ({ navigation }: any) => {
       {/* Skip button */}
       <TouchableOpacity
         style={styles.skipBtn}
-        onPress={() => navigation.navigate('Login')}>
+        onPress={handleSkip}>
         <Text style={styles.skipText}>Skip</Text>
       </TouchableOpacity>
 
@@ -114,13 +130,13 @@ export const OnboardingScreen = ({ navigation }: any) => {
           <View style={styles.ctaGroup}>
             <TouchableOpacity
               style={[styles.primaryBtn, { backgroundColor: Colors.primary }]}
-              onPress={() => navigation.navigate('Register')}
+              onPress={handleGetStarted}
               activeOpacity={0.85}>
               <Text style={styles.primaryBtnText}>Get Started — Sign Up</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.secondaryBtn}
-              onPress={() => navigation.navigate('Login')}
+              onPress={handleLogin}
               activeOpacity={0.85}>
               <Text style={styles.secondaryBtnText}>I Already Have an Account</Text>
             </TouchableOpacity>

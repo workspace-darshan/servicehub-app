@@ -24,7 +24,7 @@ const STATS = [
 
 const CONTACT_INFO = [
   { icon: 'globe-outline', value: 'staging-hub.vercel.app' },
-  { icon: 'mail-outline', value: 'hello@sevek.in' },
+  { icon: 'mail-outline', value: 'hello@Sevak.in' },
   { icon: 'call-outline', value: '(+91) 0192-181272' },
   { icon: 'location-outline', value: 'Palanpur, Gujarat 385001' },
 ];
@@ -36,7 +36,7 @@ export const AboutScreen = ({ navigation }: any) => {
   return (
     <View style={[styles.container, { height }]}>
       <StatusBar style="dark" />
-      <TopBar title="About Sevek" onBack={() => navigation.goBack()} />
+      <TopBar title="About Sevak" onBack={() => navigation.goBack()} />
 
       <ScrollView
         style={styles.scrollView}
@@ -49,7 +49,7 @@ export const AboutScreen = ({ navigation }: any) => {
           <View style={styles.logoCircle}>
             <Ionicons name="flash" size={26} color="#FF6B00" />
           </View>
-          <Text style={styles.brandName}>Sevek</Text>
+          <Text style={styles.brandName}>Sevak</Text>
           <Text style={styles.brandTagline}>B2B Service Marketplace · India</Text>
           <Text style={styles.brandSub}>
             Connecting customers with verified local professionals since 2024
@@ -79,7 +79,7 @@ export const AboutScreen = ({ navigation }: any) => {
             <Text style={styles.cardTitle}>Why We Exist</Text>
           </View>
           <Text style={styles.cardBody}>
-            Sevek connects urban Indian households and businesses with verified, skilled home service
+            Sevak connects urban Indian households and businesses with verified, skilled home service
             professionals — making quality services accessible, affordable, and dependable across
             Gujarat and beyond.
           </Text>
@@ -127,7 +127,7 @@ export const AboutScreen = ({ navigation }: any) => {
         </View>
 
         {/* Version badge */}
-        <Text style={styles.version}>Sevek v1.0.0 · Made in India 🇮🇳</Text>
+        <Text style={styles.version}>Sevak v1.0.0 · Made in India 🇮🇳</Text>
       </ScrollView>
     </View>
   );

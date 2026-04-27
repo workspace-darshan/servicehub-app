@@ -4,14 +4,20 @@ import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { AuthProvider } from './src/context/AuthContext';
+import { AppProvider } from './src/context/AppContext';
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar style="auto" />
-        <RootNavigator />
-      </NavigationContainer>
+      <AuthProvider>
+        <AppProvider>
+          <NavigationContainer>
+            <StatusBar style="auto" />
+            <RootNavigator />
+          </NavigationContainer>
+        </AppProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

@@ -138,48 +138,6 @@ export const HomeScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       <StatusBar style="dark" />
 
-      {/* Sticky Header with Blur */}
-      <BlurView intensity={80} tint="light" style={[styles.header, { paddingTop: 10 + insets.top }]}>
-        {/* Top Row */}
-        <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.greeting}>Good morning, Darshan 👋</Text>
-            <TouchableOpacity 
-              style={styles.locationRow}
-              onPress={() => setLocationModalVisible(true)}
-              activeOpacity={0.7}>
-              <Ionicons name="location" size={12} color="#FF6B00" />
-              <Text style={styles.locationText}>{currentLocation} · </Text>
-              <Text style={styles.changeText}>Change</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity
-              style={styles.notifBtn}
-              onPress={() => navigation.navigate('Notifications')}>
-              <Ionicons name="notifications-outline" size={18} color="#0D0D0D" />
-              <View style={styles.notifDot} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.avatar}
-              onPress={() => navigation.navigate('Profile')}>
-              <Text style={styles.avatarText}>DP</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Search Bar */}
-        <TouchableOpacity
-          style={styles.searchBar}
-          onPress={() => navigation.navigate('Search', { focus: true })}
-          activeOpacity={0.8}>
-          <Ionicons name="search-outline" size={15} color="#bbb" />
-          <Text style={styles.searchPlaceholder}>Search services or providers...</Text>
-          <View style={styles.divider} />
-          <Ionicons name="mic-outline" size={20} color="#888" />
-        </TouchableOpacity>
-      </BlurView>
-
       {/* Scrollable Content */}
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -238,7 +196,7 @@ export const HomeScreen = ({ navigation }: any) => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Services</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('AllServices')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Search', { showAllServices: true })}>
               <Text style={styles.viewAll}>View all →</Text>
             </TouchableOpacity>
           </View>
@@ -331,7 +289,7 @@ export const HomeScreen = ({ navigation }: any) => {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.proTitle}>Are you a professional?</Text>
-            <Text style={styles.proSub}>Grow your business with Sevek</Text>
+            <Text style={styles.proSub}>Grow your business with Sevak</Text>
           </View>
           <TouchableOpacity
             style={styles.proBtn}
@@ -342,6 +300,48 @@ export const HomeScreen = ({ navigation }: any) => {
 
         <View style={{ height: 20 }} />
       </ScrollView>
+
+      {/* Sticky Header with Blur - Positioned Absolutely */}
+      <BlurView intensity={100} tint="light" style={[styles.headerAbsolute, { paddingTop: 10 + insets.top }]}>
+        {/* Top Row */}
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.greeting}>Good morning, Darshan 👋</Text>
+            <TouchableOpacity 
+              style={styles.locationRow}
+              onPress={() => setLocationModalVisible(true)}
+              activeOpacity={0.7}>
+              <Ionicons name="location" size={12} color="#FF6B00" />
+              <Text style={styles.locationText}>{currentLocation} · </Text>
+              <Text style={styles.changeText}>Change</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.headerIcons}>
+            <TouchableOpacity
+              style={styles.notifBtn}
+              onPress={() => navigation.navigate('Notifications')}>
+              <Ionicons name="notifications-outline" size={18} color="#0D0D0D" />
+              <View style={styles.notifDot} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.avatar}
+              onPress={() => navigation.navigate('Profile')}>
+              <Text style={styles.avatarText}>DP</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Search Bar */}
+        <TouchableOpacity
+          style={styles.searchBar}
+          onPress={() => navigation.navigate('Search', { focus: true })}
+          activeOpacity={0.8}>
+          <Ionicons name="search-outline" size={15} color="#bbb" />
+          <Text style={styles.searchPlaceholder}>Search services or providers...</Text>
+          <View style={styles.divider} />
+          <Ionicons name="mic-outline" size={20} color="#888" />
+        </TouchableOpacity>
+      </BlurView>
 
       {/* Location Modal */}
       <LocationModal
@@ -359,12 +359,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F4F0',
   },
-  header: {
+  headerAbsolute: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 12,
     overflow: 'hidden',
-    backgroundColor: '#F5F4F0',
+    backgroundColor: 'rgba(245, 244, 240, 0.7)',
   },
   headerTop: {
     flexDirection: 'row',
@@ -482,6 +487,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   scrollContent: {
+    paddingTop: 140,
     paddingBottom: 100,
   },
   bannerContainer: {

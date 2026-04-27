@@ -46,12 +46,25 @@ export const SavedProvidersScreen = ({ navigation }: any) => {
             <Text style={styles.reviewCount}>({item.reviews})</Text>
           </View>
         </View>
-        {/* Remove button */}
-        <TouchableOpacity 
-          style={styles.removeBtn}
-          onPress={() => handleRemove(item.id)}>
-          <Ionicons name="bookmark" size={20} color="#FF6B00" />
-        </TouchableOpacity>
+        {/* Action buttons */}
+        <View style={styles.actionBtns}>
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={(e) => {
+              e.stopPropagation();
+              console.log('Share provider:', item.name);
+            }}>
+            <Ionicons name="share-social-outline" size={18} color="#666" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleRemove(item.id);
+            }}>
+            <Ionicons name="bookmark" size={18} color="#FF6B00" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Chips */}
@@ -116,14 +129,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F4F0',
   },
   listContent: {
-    padding: 18,
-    gap: 12,
+    paddingHorizontal: 18,
+    gap: 5,
     paddingBottom: 100,
   },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    padding: 16,
+    padding: 12,
     gap: 12,
     borderWidth: 1,
     borderColor: '#ECECEC',
@@ -183,6 +196,20 @@ const styles = StyleSheet.create({
   reviewCount: {
     fontSize: 11,
     color: '#888',
+  },
+  actionBtns: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  iconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F5F4F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#ECECEC',
   },
   removeBtn: {
     width: 40,
