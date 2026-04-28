@@ -1,52 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Image, Dimensions, Modal, Pressable,
+  Image, Dimensions, Modal, Pressable, RefreshControl,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Loading, ErrorState } from '../../components';
+import { providerService, userService } from '../../services';
+import * as formatters from '../../utils/formatters';
+import { useApp } from '../../context/AppContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-const MOCK_REVIEWS = [
-  {
-    id: '1',
-    name: 'Laurellee Quintana',
-    rating: 4.5,
-    date: '3 weeks ago',
-    comment: 'Absolutely! This is what I was looking for. I recommend to everyone!',
-    likes: 25,
-    avatar: 'LQ',
-  },
-  {
-    id: '2',
-    name: 'Clinton McClure',
-    rating: 4.3,
-    date: '1 week ago',
-    comment: 'I am very satisfied with the results. The results are very satisfying! I like it very much! 🔥🔥🔥',
-    likes: 10,
-    avatar: 'CM',
-  },
-  {
-    id: '3',
-    name: 'Chelsi Chubb',
-    rating: 5,
-    date: '1 week ago',
-    comment: 'Thank you. The quality is excellent and the results were amazing! 😍😍',
-    likes: 8,
-    avatar: 'CC',
-  },
-];
-
-const MOCK_GALLERY = [
-  { id: '1', uri: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800' },
-  { id: '2', uri: 'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=800' },
-  { id: '3', uri: 'https://images.unsplash.com/photo-1585421514738-01798e348b17?w=800' },
-  { id: '4', uri: 'https://images.unsplash.com/photo-1628177142898-93e36e4e3a50?w=800' },
-  { id: '5', uri: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800' },
-  { id: '6', uri: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=800' },
-];
 
 const RATING_FILTERS = [
   { label: 'All', value: 'all' },
@@ -75,22 +40,95 @@ const StarRow = ({ rating }: { rating: number }) => (
 );
 
 export const ProviderProfileScreen = ({ navigation, route }: any) => {
-  const provider = route?.params?.provider || {
-    name: 'Jenny Wilson',
-    service: 'House Cleaning',
-    city: '255 Grand Park Avenue, New York',
-    rating: 4.8,
-    reviews: 4479,
-    experience: 20,
-    verified: true,
-    bio: 'Professional home cleaning specialist with 20 years of experience. Trusted by hundreds of families across the city for reliable, thorough, and affordable cleaning services.',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800',
-  };
-
+  const providerId = route?.params?.id || route?.params?.provider?.id;
+  const { isProviderSaved, saveProvider, unsaveProvider } = useApp();
+  
+  const [provider, setProvider] = useState<any>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedRatingFilter, setSelectedRatingFilter] = useState('all');
   const [lightboxUri, setLightboxUri] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (providerId) {
+      loadData();
+    }
+  }, [providerId]);
+
+  useEffect(() => {
+    if (provider) {
+      setSaved(isProviderSaved(provider.id));
+    }
+  }, [provider]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [providerRes, reviewsRes] = await Promise.all([
+        providerService.getProviderById(providerId),
+        providerService.getProviderReviews(providerId, { page: 1, pageSize: 20 }),
+      ]);
+
+      if (providerRes.success && providerRes.data) {
+        setProvider(providerRes.data);
+      }
+
+      if (reviewsRes.success && reviewsRes.data) {
+        setReviews(reviewsRes.data);
+      }
+    } catch (err: any) {
+      console.error('Error loading provider:', err);
+      setError(err.message || 'Failed to load provider');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+
+  const handleSaveToggle = async () => {
+    if (!provider) return;
+
+    try {
+      if (saved) {
+        await unsaveProvider(provider.id);
+        setSaved(false);
+      } else {
+        await saveProvider({
+          id: provider.id,
+          businessName: provider.businessName,
+          rating: provider.rating,
+          city: provider.city,
+        });
+        setSaved(true);
+      }
+    } catch (err) {
+      console.error('Error toggling save:', err);
+    }
+  };
+
+  if (loading) {
+    return <Loading message="Loading provider..." />;
+  }
+
+  if (error || !provider) {
+    return <ErrorState message={error || 'Provider not found'} onRetry={loadData} />;
+  }
+
+  const gallery = provider.photos || [];
+  const filteredReviews = selectedRatingFilter === 'all'
+    ? reviews
+    : reviews.filter((r: any) => Math.floor(r.rating) === parseInt(selectedRatingFilter));
 
   return (
     <View style={styles.container}>
@@ -98,7 +136,11 @@ export const ProviderProfileScreen = ({ navigation, route }: any) => {
 
       {/* Hero Image */}
       <View style={styles.heroContainer}>
-        <Image source={{ uri: provider.image }} style={styles.heroImage} resizeMode="cover" />
+        <Image 
+          source={{ uri: gallery[0] || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800' }} 
+          style={styles.heroImage} 
+          resizeMode="cover" 
+        />
         {/* Gradient overlay for readability */}
         <View style={styles.heroOverlay} />
         <View style={[styles.headerOverlay, { paddingTop: 10 + insets.top }]}>
@@ -109,14 +151,25 @@ export const ProviderProfileScreen = ({ navigation, route }: any) => {
             <TouchableOpacity style={styles.headerBtn}>
               <Ionicons name="share-outline" size={20} color="#fff" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerBtn} onPress={() => setSaved(v => !v)}>
+            <TouchableOpacity style={styles.headerBtn} onPress={handleSaveToggle}>
               <Ionicons name={saved ? 'bookmark' : 'bookmark-outline'} size={20} color={saved ? '#FF6B00' : '#fff'} />
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={styles.scroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#FF6B00"
+            colors={['#FF6B00']}
+          />
+        }>
 
         {/* Provider Info Card */}
         <View style={styles.infoCard}>
@@ -124,7 +177,7 @@ export const ProviderProfileScreen = ({ navigation, route }: any) => {
             <Image source={{ uri: 'https://i.pravatar.cc/100?img=5' }} style={styles.avatar} />
             <View style={{ flex: 1 }}>
               <View style={styles.nameRow}>
-                <Text style={styles.providerName}>{provider.name}</Text>
+                <Text style={styles.providerName}>{provider.businessName}</Text>
                 {provider.verified && (
                   <View style={styles.verifiedBadge}>
                     <Ionicons name="shield-checkmark" size={11} color="#FF6B00" />
@@ -132,11 +185,13 @@ export const ProviderProfileScreen = ({ navigation, route }: any) => {
                   </View>
                 )}
               </View>
-              <Text style={styles.serviceLabel}>{provider.service}</Text>
+              <Text style={styles.serviceLabel}>
+                {provider.services?.[0]?.service?.name || 'Service Provider'}
+              </Text>
               <View style={styles.ratingRow}>
                 <Ionicons name="star" size={13} color="#FBBF24" />
-                <Text style={styles.ratingVal}>{provider.rating}</Text>
-                <Text style={styles.ratingCount}>({provider.reviews} reviews)</Text>
+                <Text style={styles.ratingVal}>{formatters.formatRating(provider.rating)}</Text>
+                <Text style={styles.ratingCount}>({provider.totalReviews || 0} reviews)</Text>
               </View>
             </View>
           </View>
@@ -145,12 +200,14 @@ export const ProviderProfileScreen = ({ navigation, route }: any) => {
           <View style={styles.metaRow}>
             <View style={styles.metaChip}>
               <Ionicons name="location-outline" size={13} color="#FF6B00" />
-              <Text style={styles.metaText}>{provider.city}</Text>
+              <Text style={styles.metaText}>{provider.city}, {provider.state}</Text>
             </View>
-            <View style={styles.metaChip}>
-              <Ionicons name="briefcase-outline" size={13} color="#FF6B00" />
-              <Text style={styles.metaText}>{provider.experience} yrs exp</Text>
-            </View>
+            {provider.workDays && provider.workDays.length > 0 && (
+              <View style={styles.metaChip}>
+                <Ionicons name="calendar-outline" size={13} color="#FF6B00" />
+                <Text style={styles.metaText}>{provider.workDays.join(', ')}</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -158,41 +215,46 @@ export const ProviderProfileScreen = ({ navigation, route }: any) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
           <View style={styles.card}>
-            <Text style={styles.aboutText}>{provider.bio}</Text>
+            <Text style={styles.aboutText}>
+              {provider.description || 'Professional service provider with years of experience.'}
+            </Text>
           </View>
         </View>
 
         {/* Photos & Videos */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Photos & Videos</Text>
-            <Text style={styles.countBadge}>{MOCK_GALLERY.length} photos</Text>
+        {gallery.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Photos & Videos</Text>
+              <Text style={styles.countBadge}>{gallery.length} photos</Text>
+            </View>
+            <View style={styles.galleryGrid}>
+              {gallery.slice(0, 6).map((photo: string, index: number) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.thumbWrap}
+                  onPress={() => setLightboxUri(photo)}
+                  activeOpacity={0.8}>
+                  <Image source={{ uri: photo }} style={styles.thumb} resizeMode="cover" />
+                  {index === 5 && gallery.length > 6 && (
+                    <View style={styles.moreOverlay}>
+                      <Text style={styles.moreText}>+{gallery.length - 6}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-          <View style={styles.galleryGrid}>
-            {MOCK_GALLERY.map((img, index) => (
-              <TouchableOpacity
-                key={img.id}
-                style={styles.thumbWrap}
-                onPress={() => setLightboxUri(img.uri)}
-                activeOpacity={0.8}>
-                <Image source={{ uri: img.uri }} style={styles.thumb} resizeMode="cover" />
-                {/* Show +N overlay on last visible if more exist */}
-                {index === 5 && MOCK_GALLERY.length > 6 && (
-                  <View style={styles.moreOverlay}>
-                    <Text style={styles.moreText}>+{MOCK_GALLERY.length - 6}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+        )}
 
         {/* Reviews */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Ionicons name="star" size={16} color="#FBBF24" />
-              <Text style={styles.sectionTitle}>{provider.rating} · {provider.reviews} Reviews</Text>
+              <Text style={styles.sectionTitle}>
+                {formatters.formatRating(provider.rating)} · {provider.totalReviews || 0} Reviews
+              </Text>
             </View>
           </View>
 
@@ -214,29 +276,43 @@ export const ProviderProfileScreen = ({ navigation, route }: any) => {
           </ScrollView>
 
           {/* Review cards */}
-          <View style={styles.reviewsWrap}>
-            {MOCK_REVIEWS.map((review, i) => (
-              <View key={review.id} style={[styles.reviewCard, i === MOCK_REVIEWS.length - 1 && { borderBottomWidth: 0 }]}>
-                <View style={styles.reviewTop}>
-                  <View style={styles.reviewAvatar}>
-                    <Text style={styles.reviewAvatarText}>{review.avatar}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.reviewName}>{review.name}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                      <StarRow rating={review.rating} />
-                      <Text style={styles.reviewDate}>{review.date}</Text>
+          {filteredReviews.length > 0 ? (
+            <View style={styles.reviewsWrap}>
+              {filteredReviews.map((review: any, i: number) => {
+                const customerName = review.customer?.name || 'Anonymous';
+                const initials = formatters.getInitials(customerName);
+                const relativeTime = formatters.formatRelativeTime(review.createdAt);
+
+                return (
+                  <View key={review.id} style={[styles.reviewCard, i === filteredReviews.length - 1 && { borderBottomWidth: 0 }]}>
+                    <View style={styles.reviewTop}>
+                      <View style={styles.reviewAvatar}>
+                        <Text style={styles.reviewAvatarText}>{initials}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.reviewName}>{customerName}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                          <StarRow rating={review.rating} />
+                          <Text style={styles.reviewDate}>{relativeTime}</Text>
+                        </View>
+                      </View>
                     </View>
+                    <Text style={styles.reviewComment}>{review.comment}</Text>
+                    {review.providerResponse && (
+                      <View style={styles.responseBox}>
+                        <Text style={styles.responseLabel}>Provider Response:</Text>
+                        <Text style={styles.responseText}>{review.providerResponse}</Text>
+                      </View>
+                    )}
                   </View>
-                </View>
-                <Text style={styles.reviewComment}>{review.comment}</Text>
-                <TouchableOpacity style={styles.likeBtn}>
-                  <Ionicons name="heart-outline" size={13} color="#888" />
-                  <Text style={styles.likeText}>Helpful ({review.likes})</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
+                );
+              })}
+            </View>
+          ) : (
+            <View style={styles.card}>
+              <Text style={styles.aboutText}>No reviews yet</Text>
+            </View>
+          )}
         </View>
 
         <View style={{ height: 100 }} />
@@ -287,16 +363,16 @@ export const ProviderProfileScreen = ({ navigation, route }: any) => {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.lightboxStrip}
               style={styles.lightboxStripWrap}>
-              {MOCK_GALLERY.map(img => (
+              {gallery.map((photo: string, index: number) => (
                 <TouchableOpacity
-                  key={img.id}
-                  onPress={() => setLightboxUri(img.uri)}
+                  key={index}
+                  onPress={() => setLightboxUri(photo)}
                   activeOpacity={0.8}>
                   <Image
-                    source={{ uri: img.uri }}
+                    source={{ uri: photo }}
                     style={[
                       styles.stripThumb,
-                      lightboxUri === img.uri && styles.stripThumbActive,
+                      lightboxUri === photo && styles.stripThumbActive,
                     ]}
                     resizeMode="cover"
                   />
@@ -427,6 +503,25 @@ const styles = StyleSheet.create({
   reviewName: { fontSize: 13, fontWeight: '700', color: '#0D0D0D' },
   reviewDate: { fontSize: 10, color: '#AAAAAA' },
   reviewComment: { fontSize: 12, color: '#555', lineHeight: 19, marginBottom: 8 },
+  responseBox: {
+    backgroundColor: '#F5F4F0',
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#FF6B00',
+  },
+  responseLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FF6B00',
+    marginBottom: 4,
+  },
+  responseText: {
+    fontSize: 11,
+    color: '#555',
+    lineHeight: 17,
+  },
   likeBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start' },
   likeText: { fontSize: 11, color: '#888' },
 

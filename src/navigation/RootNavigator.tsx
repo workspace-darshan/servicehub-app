@@ -117,6 +117,7 @@ const PROVIDER_TABS: ProviderTabConfig[] = [
   { name: 'Search', label: 'Search', icon: 'search', component: SearchScreen },
   { name: 'ProviderEnquiries', label: 'Enquiries', icon: 'mail', component: ProviderEnquiriesScreen },
   { name: 'ProviderEditProfile', label: 'Profile', icon: 'person', component: ProviderEditProfileScreen },
+  { name: 'Settings', label: 'Settings', icon: 'settings', component: SettingsScreen },
 ];
 
 const ProviderTab = createBottomTabNavigator();

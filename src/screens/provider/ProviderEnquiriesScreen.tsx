@@ -4,8 +4,8 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, FontSize, FontWeight, BorderRadius, Shadows } from '../../constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 
 const ENQUIRIES = [
   {
@@ -31,9 +31,9 @@ const ENQUIRIES = [
 ];
 
 const STATUS_CFG: Record<string, { color: string; bg: string; icon: string }> = {
-  New: { color: Colors.accentOrange, bg: '#FFF7ED', icon: 'sparkles-outline' },
-  Replied: { color: Colors.primary, bg: Colors.blue50, icon: 'chatbubble-outline' },
-  Closed: { color: Colors.slate400, bg: Colors.background, icon: 'checkmark-circle-outline' },
+  New: { color: '#FF6B00', bg: '#FFF4ED', icon: 'sparkles-outline' },
+  Replied: { color: '#7C3AED', bg: '#EDE9FE', icon: 'chatbubble-outline' },
+  Closed: { color: '#888', bg: '#F5F4F0', icon: 'checkmark-circle-outline' },
 };
 
 const TABS = ['New', 'Replied', 'All'];
@@ -71,7 +71,7 @@ export const ProviderEnquiriesScreen = ({ navigation }: any) => {
 
         {/* Service chip */}
         <View style={styles.serviceChip}>
-          <Ionicons name="construct-outline" size={11} color={Colors.primary} />
+          <Ionicons name="construct-outline" size={11} color="#7C3AED" />
           <Text style={styles.serviceChipText}>{item.service}</Text>
         </View>
 
@@ -81,11 +81,11 @@ export const ProviderEnquiriesScreen = ({ navigation }: any) => {
         {/* Preferred slot */}
         <View style={styles.slotRow}>
           <View style={styles.slotItem}>
-            <Ionicons name="calendar-outline" size={13} color={Colors.slate400} />
+            <Ionicons name="calendar-outline" size={13} color="#888" />
             <Text style={styles.slotText}>{item.preferredDate}</Text>
           </View>
           <View style={styles.slotItem}>
-            <Ionicons name="time-outline" size={13} color={Colors.slate400} />
+            <Ionicons name="time-outline" size={13} color="#888" />
             <Text style={styles.slotText}>{item.preferredTime}</Text>
           </View>
         </View>
@@ -97,7 +97,7 @@ export const ProviderEnquiriesScreen = ({ navigation }: any) => {
           </TouchableOpacity>
           {item.status === 'New' && (
             <TouchableOpacity style={styles.replyBtn}>
-              <Ionicons name="send-outline" size={15} color={Colors.white} />
+              <Ionicons name="send-outline" size={15} color="#fff" />
               <Text style={styles.replyBtnText}>Reply</Text>
             </TouchableOpacity>
           )}
@@ -109,36 +109,45 @@ export const ProviderEnquiriesScreen = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
-      <View style={[styles.header, { paddingTop: 14 + insets.top }]}>
-        <Text style={styles.headerTitle}>Enquiries</Text>
-        {newCount > 0 && (
-          <View style={styles.newCountBadge}>
-            <Text style={styles.newCountText}>{newCount} new</Text>
-          </View>
-        )}
-      </View>
+      
+      {/* Header with Blur */}
+      <BlurView intensity={100} tint="light" style={[styles.headerAbsolute, { paddingTop: 10 + insets.top }]}>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Enquiries</Text>
+          {newCount > 0 && (
+            <View style={styles.newCountBadge}>
+              <Text style={styles.newCountText}>{newCount} new</Text>
+            </View>
+          )}
+        </View>
 
-      {/* Tabs */}
-      <View style={styles.tabs}>
-        {TABS.map(tab => (
-          <TouchableOpacity
-            key={tab}
-            style={[styles.tab, activeTab === tab && styles.tabActive]}
-            onPress={() => setActiveTab(tab)}>
-            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+        {/* Tabs */}
+        <View style={styles.tabs}>
+          {TABS.map(tab => (
+            <TouchableOpacity
+              key={tab}
+              style={[styles.tab, activeTab === tab && styles.tabActive]}
+              onPress={() => setActiveTab(tab)}>
+              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </BlurView>
 
       <FlatList
         data={filtered}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 20, gap: 12, paddingBottom: 100 }}
+        contentContainerStyle={{ 
+          paddingTop: 100, 
+          paddingHorizontal: 18, 
+          paddingBottom: 100,
+          gap: 12,
+        }}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Ionicons name="mail-open-outline" size={56} color={Colors.slate300} />
+            <Ionicons name="mail-open-outline" size={56} color="#CCC" />
             <Text style={styles.emptyTitle}>No enquiries here</Text>
           </View>
         }
@@ -148,68 +157,137 @@ export const ProviderEnquiriesScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: 20, paddingTop: 52, paddingBottom: 14,
-    backgroundColor: Colors.white, borderBottomWidth: 1, borderBottomColor: Colors.border,
+  container: { flex: 1, backgroundColor: '#F5F4F0' },
+  headerAbsolute: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 12,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(245, 244, 240, 0.7)',
   },
-  headerTitle: { flex: 1, fontSize: FontSize.h1, fontWeight: FontWeight.extrabold, color: Colors.darkNavy },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  headerTitle: { 
+    flex: 1, 
+    fontSize: 20, 
+    fontWeight: '700', 
+    color: '#0D0D0D',
+    letterSpacing: -0.4,
+  },
   newCountBadge: {
-    backgroundColor: Colors.accentOrange + '20', paddingHorizontal: 10, paddingVertical: 4,
-    borderRadius: BorderRadius.full, borderWidth: 1, borderColor: Colors.accentOrange + '50',
+    backgroundColor: '#FFF4ED', 
+    paddingHorizontal: 10, 
+    paddingVertical: 4,
+    borderRadius: 20, 
+    borderWidth: 1, 
+    borderColor: '#FFD4B3',
   },
-  newCountText: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.accentOrange },
+  newCountText: { fontSize: 10, fontWeight: '700', color: '#FF6B00' },
   tabs: {
-    flexDirection: 'row', backgroundColor: Colors.white,
-    paddingHorizontal: 20, paddingBottom: 12, gap: 8,
-    borderBottomWidth: 1, borderBottomColor: Colors.border,
+    flexDirection: 'row',
+    gap: 8,
   },
-  tab: { paddingHorizontal: 18, paddingVertical: 8, borderRadius: BorderRadius.full, backgroundColor: Colors.surfaceContainerLow },
-  tabActive: { backgroundColor: Colors.primary },
-  tabText: { fontSize: FontSize.sm, fontWeight: FontWeight.semibold, color: Colors.slate500 },
-  tabTextActive: { color: Colors.white },
-  card: { backgroundColor: Colors.white, borderRadius: 16, padding: 16, gap: 10, ...Shadows.card },
+  tab: { 
+    paddingHorizontal: 18, 
+    paddingVertical: 8, 
+    borderRadius: 20, 
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+  },
+  tabActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
+  tabText: { fontSize: 12, fontWeight: '600', color: '#888' },
+  tabTextActive: { color: '#fff', fontWeight: '700' },
+  card: { 
+    backgroundColor: '#FFFFFF', 
+    borderRadius: 16, 
+    padding: 16, 
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+  },
   cardHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   avatar: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.blue50,
-    borderWidth: 1.5, borderColor: Colors.blue200, alignItems: 'center', justifyContent: 'center',
+    width: 44, 
+    height: 44, 
+    borderRadius: 22, 
+    backgroundColor: '#EDE9FE',
+    alignItems: 'center', 
+    justifyContent: 'center',
   },
-  avatarText: { fontSize: 14, fontWeight: FontWeight.bold, color: Colors.primary },
-  customerName: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.darkNavy },
-  date: { fontSize: FontSize.xs, color: Colors.slate400, marginTop: 2 },
+  avatarText: { fontSize: 14, fontWeight: '700', color: '#7C3AED' },
+  customerName: { fontSize: 14, fontWeight: '700', color: '#0D0D0D' },
+  date: { fontSize: 10, color: '#AAA', marginTop: 2 },
   statusBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 8, paddingVertical: 5, borderRadius: BorderRadius.full,
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 4,
+    paddingHorizontal: 8, 
+    paddingVertical: 5, 
+    borderRadius: 20,
   },
-  statusText: { fontSize: 10, fontWeight: FontWeight.bold },
+  statusText: { fontSize: 10, fontWeight: '700' },
   serviceChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start',
-    backgroundColor: Colors.blue50, paddingHorizontal: 10, paddingVertical: 5,
-    borderRadius: BorderRadius.full, borderWidth: 1, borderColor: Colors.blue200,
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 5, 
+    alignSelf: 'flex-start',
+    backgroundColor: '#EDE9FE', 
+    paddingHorizontal: 10, 
+    paddingVertical: 5,
+    borderRadius: 20, 
+    borderWidth: 1, 
+    borderColor: '#D8B4FE',
   },
-  serviceChipText: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.primary },
-  message: { fontSize: FontSize.sm, color: Colors.slate500, lineHeight: 19 },
+  serviceChipText: { fontSize: 11, fontWeight: '700', color: '#7C3AED' },
+  message: { fontSize: 13, color: '#666', lineHeight: 19 },
   slotRow: {
-    flexDirection: 'row', gap: 16, backgroundColor: Colors.background,
-    borderRadius: BorderRadius.sm, padding: 10,
+    flexDirection: 'row', 
+    gap: 16, 
+    backgroundColor: '#F5F4F0',
+    borderRadius: 12, 
+    padding: 10,
   },
   slotItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  slotText: { fontSize: FontSize.sm, color: Colors.lightNavy },
+  slotText: { fontSize: 12, color: '#0D0D0D', fontWeight: '500' },
   actions: {
-    flexDirection: 'row', gap: 10, paddingTop: 10,
-    borderTopWidth: 1, borderTopColor: Colors.border,
+    flexDirection: 'row', 
+    gap: 10, 
+    paddingTop: 10,
+    borderTopWidth: 1, 
+    borderTopColor: '#ECECEC',
   },
   viewBtn: {
-    flex: 1, height: 40, borderRadius: BorderRadius.md,
-    borderWidth: 1.5, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center',
+    flex: 1, 
+    height: 40, 
+    borderRadius: 12,
+    borderWidth: 1.5, 
+    borderColor: '#ECECEC', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
-  viewBtnText: { fontSize: FontSize.sm, fontWeight: FontWeight.semibold, color: Colors.slate500 },
+  viewBtnText: { fontSize: 13, fontWeight: '600', color: '#555' },
   replyBtn: {
-    flex: 1, height: 40, backgroundColor: Colors.primary, borderRadius: BorderRadius.md,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    flex: 1, 
+    height: 40, 
+    backgroundColor: '#FF6B00', 
+    borderRadius: 12,
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 6,
   },
-  replyBtnText: { fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.white },
+  replyBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
   empty: { paddingTop: 60, alignItems: 'center', gap: 10 },
-  emptyTitle: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.darkNavy },
+  emptyTitle: { fontSize: 16, fontWeight: '700', color: '#0D0D0D' },
 });

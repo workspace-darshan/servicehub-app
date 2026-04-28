@@ -1,16 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, NativeScrollEvent, NativeSyntheticEvent,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, NativeScrollEvent, NativeSyntheticEvent, RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SERVICES } from '../../data/mockData';
 import { LocationModal } from '../../components/LocationModal';
+import { Loading, ErrorState } from '../../components';
 import { useAuth } from '../../context/AuthContext';
-import { getProviderProfile, ProviderProfile } from '../../services/storage';
+import { serviceService, providerService, enquiryService } from '../../services';
+import { Service, ServiceCategory } from '../../services/serviceService';
+import { ProviderProfile } from '../../services/providerService';
+import { APP_CONFIG } from '../../config';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_WIDTH = SCREEN_WIDTH - 36; // 18px margin on each side
@@ -130,15 +133,100 @@ export const HomeScreen = ({ navigation }: any) => {
   const bannerScrollRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
 
+  // API State
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
+  const [recentEnquiries, setRecentEnquiries] = useState<any[]>([]);
+
   useEffect(() => {
-    if (user?.isProvider) {
-      loadProviderProfile();
-    }
+    loadData();
   }, [user?.isProvider]);
 
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      if (user?.isProvider) {
+        // Load provider data
+        await Promise.all([
+          loadProviderProfile(),
+          loadDashboardStats(),
+          loadRecentEnquiries(),
+        ]);
+      } else {
+        // Load customer data
+        await loadServices();
+      }
+    } catch (err: any) {
+      console.error('Error loading data:', err);
+      setError(err.message || 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadServices = async () => {
+    try {
+      const response = await serviceService.getServices({
+        page: 1,
+        pageSize: 20,
+      });
+      
+      if (response.success && response.data) {
+        setServices(response.data);
+      }
+    } catch (err: any) {
+      console.error('Error loading services:', err);
+      throw err;
+    }
+  };
+
   const loadProviderProfile = async () => {
-    const profile = await getProviderProfile();
-    setProviderProfile(profile);
+    try {
+      const response = await providerService.getProviderById(user?.id || '');
+      if (response.success && response.data) {
+        setProviderProfile(response.data);
+      }
+    } catch (err: any) {
+      console.error('Error loading provider profile:', err);
+    }
+  };
+
+  const loadDashboardStats = async () => {
+    try {
+      const response = await providerService.getDashboardStats();
+      if (response.success && response.data) {
+        setDashboardStats(response.data);
+      }
+    } catch (err: any) {
+      console.error('Error loading dashboard stats:', err);
+    }
+  };
+
+  const loadRecentEnquiries = async () => {
+    try {
+      const response = await enquiryService.getEnquiries({
+        page: 1,
+        pageSize: 3,
+        status: 'PENDING',
+      });
+      
+      if (response.success && response.data) {
+        setRecentEnquiries(response.data);
+      }
+    } catch (err: any) {
+      console.error('Error loading recent enquiries:', err);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
   };
 
   const displayName = user?.name?.split(' ')[0] || 'User';
@@ -172,6 +260,16 @@ export const HomeScreen = ({ navigation }: any) => {
     setCurrentBannerIndex(index);
   };
 
+  // Show loading state
+  if (loading) {
+    return <Loading message="Loading..." />;
+  }
+
+  // Show error state
+  if (error) {
+    return <ErrorState message={error} onRetry={loadData} />;
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
@@ -179,17 +277,25 @@ export const HomeScreen = ({ navigation }: any) => {
       {/* Scrollable Content */}
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}>
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#FF6B00"
+            colors={['#FF6B00']}
+          />
+        }>
 
         {/* Provider Stats - Only for Providers */}
-        {user?.isProvider && (
+        {user?.isProvider && dashboardStats && (
           <View style={styles.providerStatsSection}>
             <View style={styles.statsRow}>
               <View style={styles.statCard}>
                 <View style={[styles.statIcon, { backgroundColor: '#EDE9FE' }]}>
                   <Ionicons name="mail-open-outline" size={20} color="#7C3AED" />
                 </View>
-                <Text style={styles.statValue}>5</Text>
+                <Text style={styles.statValue}>{dashboardStats.newEnquiries || 0}</Text>
                 <Text style={styles.statLabel}>New Enquiries</Text>
                 <Text style={styles.statSub}>THIS WEEK</Text>
               </View>
@@ -197,15 +303,15 @@ export const HomeScreen = ({ navigation }: any) => {
                 <View style={[styles.statIcon, { backgroundColor: '#FEF9C3' }]}>
                   <Ionicons name="star" size={20} color="#CA8A04" />
                 </View>
-                <Text style={styles.statValue}>4.8</Text>
+                <Text style={styles.statValue}>{dashboardStats.rating?.toFixed(1) || '0.0'}</Text>
                 <Text style={styles.statLabel}>Rating</Text>
-                <Text style={styles.statSub}>32 REVIEWS</Text>
+                <Text style={styles.statSub}>{dashboardStats.totalReviews || 0} REVIEWS</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={[styles.statIcon, { backgroundColor: '#DCFCE7' }]}>
                   <Ionicons name="eye-outline" size={20} color="#16A34A" />
                 </View>
-                <Text style={styles.statValue}>124</Text>
+                <Text style={styles.statValue}>{dashboardStats.profileViews || 0}</Text>
                 <Text style={styles.statLabel}>Profile Views</Text>
                 <Text style={styles.statSub}>THIS MONTH</Text>
               </View>
@@ -274,31 +380,45 @@ export const HomeScreen = ({ navigation }: any) => {
                 </TouchableOpacity>
               </View>
 
-              <View style={{ gap: 10 }}>
-                {RECENT_ENQUIRIES.map(enq => (
-                  <TouchableOpacity
-                    key={enq.id}
-                    style={styles.enquiryCard}
-                    onPress={() => navigation.navigate('ProviderEnquiries')}
-                    activeOpacity={0.7}>
-                    <View style={styles.enquiryAvatar}>
-                      <Text style={styles.enquiryAvatarText}>{enq.initials}</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.enquiryName}>{enq.name}</Text>
-                      <Text style={styles.enquiryService}>{enq.service}</Text>
-                    </View>
-                    <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                      {enq.isNew && (
-                        <View style={styles.newBadge}>
-                          <Text style={styles.newBadgeText}>New</Text>
+              {recentEnquiries.length > 0 ? (
+                <View style={{ gap: 10 }}>
+                  {recentEnquiries.map(enq => {
+                    const customerName = enq.customer?.name || 'Unknown';
+                    const initials = customerName.split(' ').map((n: string) => n[0]).join('').toUpperCase();
+                    const serviceName = enq.service?.name || 'Service';
+                    const date = new Date(enq.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    const isNew = enq.status === 'PENDING';
+
+                    return (
+                      <TouchableOpacity
+                        key={enq.id}
+                        style={styles.enquiryCard}
+                        onPress={() => navigation.navigate('ProviderEnquiries')}
+                        activeOpacity={0.7}>
+                        <View style={styles.enquiryAvatar}>
+                          <Text style={styles.enquiryAvatarText}>{initials}</Text>
                         </View>
-                      )}
-                      <Text style={styles.enquiryDate}>{enq.date}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.enquiryName}>{customerName}</Text>
+                          <Text style={styles.enquiryService}>{serviceName}</Text>
+                        </View>
+                        <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                          {isNew && (
+                            <View style={styles.newBadge}>
+                              <Text style={styles.newBadgeText}>New</Text>
+                            </View>
+                          )}
+                          <Text style={styles.enquiryDate}>{date}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ) : (
+                <View style={styles.emptyCard}>
+                  <Text style={styles.emptyText}>No recent enquiries</Text>
+                </View>
+              )}
             </View>
 
             {/* Quick Actions - Provider Only */}
@@ -331,7 +451,7 @@ export const HomeScreen = ({ navigation }: any) => {
                 </TouchableOpacity>
               </View>
               <View style={styles.serviceGrid}>
-                {SERVICES.slice(0, 8).map((service, index) => {
+                {services.slice(0, 8).map((service, index) => {
                   const colorSet = SERVICE_COLORS[index % SERVICE_COLORS.length];
                   return (
                     <TouchableOpacity
@@ -429,12 +549,6 @@ export const HomeScreen = ({ navigation }: any) => {
             </View>
           </>
         )}
-
-        <View style={{ height: 20 }} />
-            onPress={() => navigation.navigate('BecomeProvider')}>
-            <Text style={styles.proBtnText}>Join now →</Text>
-          </TouchableOpacity>
-        </View>
 
         <View style={{ height: 20 }} />
       </ScrollView>
@@ -629,7 +743,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   scrollContent: {
-    paddingTop: 160,
+    paddingTop: 135,
     paddingBottom: 100,
   },
   providerStatsSection: {
@@ -1036,5 +1150,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#0D0D0D',
     textAlign: 'center',
+  },
+  emptyCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 13,
+    color: '#888',
   },
 });

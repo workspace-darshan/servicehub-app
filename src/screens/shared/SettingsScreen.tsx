@@ -10,7 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
 export const SettingsScreen = ({ navigation }: any) => {
-  const { user, toggleProviderMode } = useAuth();
+  const { user, toggleProviderMode, logout } = useAuth();
   const [notifs, setNotifs] = useState({
     newEnquiries: true, replies: true, promo: false, email: true,
   });
@@ -28,7 +28,18 @@ export const SettingsScreen = ({ navigation }: any) => {
             style: 'destructive',
             onPress: async () => {
               await toggleProviderMode(false);
-              Alert.alert('Success', 'Switched to customer mode');
+              Alert.alert('Success', 'Switched to customer mode', [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    // Navigate to customer tabs
+                    navigation.reset({
+                      index: 0,
+                      routes: [{ name: 'CustomerTabs' }],
+                    });
+                  },
+                },
+              ]);
             },
           },
         ]
@@ -44,7 +55,18 @@ export const SettingsScreen = ({ navigation }: any) => {
             text: 'Activate',
             onPress: async () => {
               await toggleProviderMode(true);
-              Alert.alert('Success', 'Switched to provider mode');
+              Alert.alert('Success', 'Switched to provider mode', [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    // Navigate to provider tabs
+                    navigation.reset({
+                      index: 0,
+                      routes: [{ name: 'ProviderTabs' }],
+                    });
+                  },
+                },
+              ]);
             },
           },
         ]
@@ -136,6 +158,36 @@ export const SettingsScreen = ({ navigation }: any) => {
           )}
           <NavRow icon="lock-closed-outline" label="Change Password" />
           <NavRow icon="logo-google" label="Linked Accounts" value="Google" />
+          <TouchableOpacity 
+            style={[styles.row, { borderBottomWidth: 0 }]}
+            onPress={async () => {
+              Alert.alert(
+                'Logout',
+                'Are you sure you want to logout?',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Logout',
+                    style: 'destructive',
+                    onPress: async () => {
+                      await logout();
+                      // Reset navigation to auth flow
+                      navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Splash' }],
+                      });
+                    },
+                  },
+                ]
+              );
+            }}
+            activeOpacity={0.65}>
+            <View style={[styles.rowIcon, { backgroundColor: '#FEE2E2' }]}>
+              <Ionicons name="log-out-outline" size={18} color="#E11D48" />
+            </View>
+            <Text style={[styles.rowLabel, { color: '#E11D48' }]}>Logout</Text>
+            <Ionicons name="chevron-forward" size={16} color="#888" />
+          </TouchableOpacity>
           <NavRow icon="warning-outline" label="Delete Account" danger last />
         </View>
 

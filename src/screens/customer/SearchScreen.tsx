@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput,
-  Dimensions, Modal, Animated,
+  Dimensions, Modal, Animated, RefreshControl,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SERVICES, PROVIDERS } from '../../data/mockData';
+import { Loading, ErrorState } from '../../components';
+import { serviceService, providerService, userService } from '../../services';
+import * as helpers from '../../utils/helpers';
+import * as formatters from '../../utils/formatters';
+import { APP_CONFIG } from '../../config';
 
 const { height } = Dimensions.get('window');
 
@@ -61,8 +65,15 @@ export const SearchScreen = ({ navigation, route }: any) => {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [showAllServices, setShowAllServices] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<string[]>(DEFAULT_RECENT);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isFocused, setIsFocused] = useState(false);
+
+  // API State
+  const [services, setServices] = useState<any[]>([]);
+  const [providers, setProviders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Filter state
   const [selectedCity, setSelectedCity] = useState('All Cities');
@@ -84,6 +95,136 @@ export const SearchScreen = ({ navigation, route }: any) => {
     selectedCity !== 'All Cities', verifiedOnly, minRating > 0, minExp > 0,
   ].filter(Boolean).length;
 
+  // Debounced search
+  const debouncedSearch = useRef(
+    helpers.debounce(async (query: string) => {
+      if (query.length < APP_CONFIG.MIN_SEARCH_LENGTH) return;
+      await searchProviders(query);
+    }, APP_CONFIG.SEARCH_DEBOUNCE_MS)
+  ).current;
+
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  useEffect(() => {
+    if (route?.params?.focus) {
+      setTimeout(() => searchRef.current?.focus(), 150);
+    }
+    if (route?.params?.service) {
+      setSearch(route.params.service);
+      addRecent(route.params.service);
+      searchProviders(route.params.service);
+    }
+    if (route?.params?.showAllServices) {
+      setShowAllServices(true);
+    }
+  }, [route?.params?.focus, route?.params?.service, route?.params?.showAllServices]);
+
+  useEffect(() => {
+    if (search.length >= APP_CONFIG.MIN_SEARCH_LENGTH) {
+      debouncedSearch(search);
+    } else if (search.length === 0) {
+      loadProviders();
+    }
+  }, [search]);
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      await Promise.all([
+        loadServices(),
+        loadProviders(),
+        loadSearchHistory(),
+      ]);
+    } catch (err: any) {
+      console.error('Error loading initial data:', err);
+      setError(err.message || 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadServices = async () => {
+    try {
+      const response = await serviceService.getServices({
+        page: 1,
+        pageSize: 50,
+      });
+      
+      if (response.success && response.data) {
+        setServices(response.data);
+      }
+    } catch (err: any) {
+      console.error('Error loading services:', err);
+      throw err;
+    }
+  };
+
+  const loadProviders = async () => {
+    try {
+      const params: any = {
+        page: 1,
+        pageSize: 50,
+      };
+
+      if (selectedCity !== 'All Cities') params.city = selectedCity;
+      if (verifiedOnly) params.verified = true;
+      if (minRating > 0) params.minRating = minRating;
+
+      const response = await providerService.getProviders(params);
+      
+      if (response.success && response.data) {
+        setProviders(response.data);
+      }
+    } catch (err: any) {
+      console.error('Error loading providers:', err);
+      throw err;
+    }
+  };
+
+  const searchProviders = async (query: string) => {
+    try {
+      const params: any = {
+        search: query,
+        page: 1,
+        pageSize: 50,
+      };
+
+      if (selectedCity !== 'All Cities') params.city = selectedCity;
+      if (verifiedOnly) params.verified = true;
+      if (minRating > 0) params.minRating = minRating;
+
+      const response = await providerService.searchProviders(params);
+      
+      if (response.success && response.data) {
+        setProviders(response.data);
+      }
+    } catch (err: any) {
+      console.error('Error searching providers:', err);
+    }
+  };
+
+  const loadSearchHistory = async () => {
+    try {
+      const response = await userService.getSearchHistory();
+      
+      if (response.success && response.data) {
+        setRecentSearches(response.data.slice(0, APP_CONFIG.MAX_RECENT_SEARCHES));
+      }
+    } catch (err: any) {
+      console.error('Error loading search history:', err);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadInitialData();
+    setRefreshing(false);
+  };
+
   const openSheet = () => {
     setDraftCity(selectedCity); setDraftVerified(verifiedOnly);
     setDraftRating(minRating); setDraftExp(minExp);
@@ -98,10 +239,13 @@ export const SearchScreen = ({ navigation, route }: any) => {
       });
   };
 
-  const applyFilters = () => {
+  const applyFilters = async () => {
     setSelectedCity(draftCity); setVerifiedOnly(draftVerified);
     setMinRating(draftRating); setMinExp(draftExp);
     closeSheet();
+    
+    // Reload providers with new filters
+    await loadProviders();
   };
 
   const resetFilters = () => {
@@ -109,35 +253,46 @@ export const SearchScreen = ({ navigation, route }: any) => {
     setDraftRating(0); setDraftExp(0);
   };
 
-  useEffect(() => {
-    if (route?.params?.focus) {
-      setTimeout(() => searchRef.current?.focus(), 150);
-    }
-    if (route?.params?.service) {
-      setSearch(route.params.service);
-      addRecent(route.params.service);
-    }
-    if (route?.params?.showAllServices) {
-      setShowAllServices(true);
-    }
-  }, [route?.params?.focus, route?.params?.service, route?.params?.showAllServices]);
-
-  const addRecent = (term: string) => {
+  const addRecent = async (term: string) => {
     if (!term.trim()) return;
-    setRecentSearches(prev => {
-      const filtered = prev.filter(r => r.toLowerCase() !== term.toLowerCase());
-      return [term, ...filtered].slice(0, MAX_RECENT);
-    });
+    
+    try {
+      await userService.addSearchHistory(term.trim());
+      await loadSearchHistory();
+    } catch (err) {
+      console.error('Error adding search history:', err);
+    }
   };
 
-  const removeRecent = (term: string) => {
-    setRecentSearches(prev => prev.filter(r => r !== term));
-    // Keep the input focused to prevent panel from closing
-    setTimeout(() => {
-      if (searchRef.current) {
-        searchRef.current.focus();
-      }
-    }, 50);
+  const removeRecent = async (term: string) => {
+    try {
+      // Remove from local state immediately
+      setRecentSearches(prev => prev.filter(r => r !== term));
+      
+      // Keep the input focused
+      setTimeout(() => {
+        if (searchRef.current) {
+          searchRef.current.focus();
+        }
+      }, 50);
+    } catch (err) {
+      console.error('Error removing search:', err);
+    }
+  };
+
+  const clearAllRecent = async () => {
+    try {
+      await userService.clearSearchHistory();
+      setRecentSearches([]);
+      
+      setTimeout(() => {
+        if (searchRef.current) {
+          searchRef.current.focus();
+        }
+      }, 50);
+    } catch (err) {
+      console.error('Error clearing search history:', err);
+    }
   };
 
   const handleSubmit = () => {
@@ -156,21 +311,10 @@ export const SearchScreen = ({ navigation, route }: any) => {
 
   const showRecentPanel = isFocused && search.length === 0;
 
-  // Filter providers based on search text + active filters + selected service
-  const filteredProviders = PROVIDERS.filter(p => {
-    const matchSearch = search.length === 0
-      || p.name.toLowerCase().includes(search.toLowerCase())
-      || p.service.toLowerCase().includes(search.toLowerCase());
-    const matchCity = selectedCity === 'All Cities' || p.city === selectedCity;
-    const matchVerified = !verifiedOnly || p.verified;
-    const matchRating = p.rating >= minRating;
-    const matchExp = p.experience >= minExp;
-    return matchSearch && matchCity && matchVerified && matchRating && matchExp;
-  });
-
-  const filtered = SERVICES.filter(s => {
+  // Filter services based on search
+  const filtered = services.filter(s => {
     const matchSearch = s.name.toLowerCase().includes(search.toLowerCase());
-    const matchCat = category === 'All' || s.category === category;
+    const matchCat = category === 'All' || s.category?.name === category;
     return matchSearch && matchCat;
   });
 
@@ -181,6 +325,16 @@ export const SearchScreen = ({ navigation, route }: any) => {
   const rows: typeof filtered[] = [];
   for (let i = 0; i < displayServices.length; i += numColumns) {
     rows.push(displayServices.slice(i, i + numColumns));
+  }
+
+  // Loading state
+  if (loading) {
+    return <Loading message="Loading..." />;
+  }
+
+  // Error state
+  if (error) {
+    return <ErrorState message={error} onRetry={loadInitialData} />;
   }
 
   return (
@@ -246,17 +400,11 @@ export const SearchScreen = ({ navigation, route }: any) => {
           onResponderRelease={() => false}>
           <View style={styles.recentHeader}>
             <Text style={styles.recentLabel}>Recent</Text>
-            {recentSearches.length > 0 && (
+              {recentSearches.length > 0 && (
               <TouchableOpacity 
                 onPressIn={(e) => {
                   e.stopPropagation();
-                  setRecentSearches([]);
-                  // Keep the input focused to prevent panel from closing
-                  setTimeout(() => {
-                    if (searchRef.current) {
-                      searchRef.current.focus();
-                    }
-                  }, 50);
+                  clearAllRecent();
                 }}
                 activeOpacity={0.7}>
                 <Text style={styles.clearAll}>Clear all</Text>
@@ -317,7 +465,15 @@ export const SearchScreen = ({ navigation, route }: any) => {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scroll}>
+        contentContainerStyle={styles.scroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#FF6B00"
+            colors={['#FF6B00']}
+          />
+        }>
 
         {/* Category chips + Services — only when no search active */}
         {search.length === 0 && (
@@ -365,39 +521,45 @@ export const SearchScreen = ({ navigation, route }: any) => {
             <Text style={styles.sectionTitle}>
               {search.length > 0 ? `Providers for "${search}"` : 'All Providers'}
             </Text>
-            <Text style={styles.providerCount}>{filteredProviders.length} found</Text>
+            <Text style={styles.providerCount}>{providers.length} found</Text>
           </View>
 
-          {filteredProviders.length > 0 ? filteredProviders.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.providerCard}
-              onPress={() => navigation.navigate('ProviderProfile', { provider: item })}
-              activeOpacity={0.85}>
-              <View style={styles.providerAvatar}>
-                <Text style={styles.providerInitials}>{item.initials}</Text>
-              </View>
-              <View style={styles.providerInfo}>
-                <View style={styles.providerNameRow}>
-                  <Text style={styles.providerName}>{item.name}</Text>
-                  {item.verified && (
-                    <View style={styles.verifiedBadge}>
-                      <Ionicons name="shield-checkmark" size={10} color="#FF6B00" />
-                      <Text style={styles.verifiedText}>Verified</Text>
-                    </View>
-                  )}
+          {providers.length > 0 ? providers.map((item) => {
+            const initials = formatters.getInitials(item.user?.name || item.businessName);
+            const rating = formatters.formatRating(item.rating);
+            
+            return (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.providerCard}
+                onPress={() => navigation.navigate('ProviderProfile', { id: item.id })}
+                activeOpacity={0.85}>
+                <View style={styles.providerAvatar}>
+                  <Text style={styles.providerInitials}>{initials}</Text>
                 </View>
-                <Text style={styles.providerService}>{item.service} · {item.city}</Text>
-                <View style={styles.ratingRow}>
-                  <Ionicons name="star" size={11} color="#FBBF24" />
-                  <Text style={styles.providerRating}>{item.rating}</Text>
-                  <Text style={styles.providerReviews}>({item.reviews} reviews)</Text>
-                  <Text style={styles.expText}>{item.experience} yrs exp</Text>
+                <View style={styles.providerInfo}>
+                  <View style={styles.providerNameRow}>
+                    <Text style={styles.providerName}>{item.businessName}</Text>
+                    {item.verified && (
+                      <View style={styles.verifiedBadge}>
+                        <Ionicons name="shield-checkmark" size={10} color="#FF6B00" />
+                        <Text style={styles.verifiedText}>Verified</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.providerService}>
+                    {item.services?.[0]?.service?.name || 'Service Provider'} · {item.city}
+                  </Text>
+                  <View style={styles.ratingRow}>
+                    <Ionicons name="star" size={11} color="#FBBF24" />
+                    <Text style={styles.providerRating}>{rating}</Text>
+                    <Text style={styles.providerReviews}>({item.totalReviews || 0} reviews)</Text>
+                  </View>
                 </View>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color="#CCC" />
-            </TouchableOpacity>
-          )) : (
+                <Ionicons name="chevron-forward" size={16} color="#CCC" />
+              </TouchableOpacity>
+            );
+          }) : (
             <View style={styles.empty}>
               <Ionicons name="people-outline" size={40} color="#ccc" />
               <Text style={styles.emptyTitle}>No providers found</Text>

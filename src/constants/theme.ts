@@ -1,9 +1,19 @@
-// Sevak Design System — Color Tokens
+/**
+ * ServiceHub Design System
+ * Centralized theme configuration
+ */
+
+// Color Tokens
 export const Colors = {
-  // Primary
-  primary: '#1D4ED8',
-  primaryDark: '#1E40AF',
-  primaryLight: '#3B82F6',
+  // Primary (Orange)
+  primary: '#FF6B00',
+  primaryDark: '#E65100',
+  primaryLight: '#FFD4B3',
+  
+  // Secondary (Purple)
+  secondary: '#7C3AED',
+  secondaryDark: '#5B21B6',
+  secondaryLight: '#EDE9FE',
 
   // Neutrals
   darkNavy: '#0F172A',
@@ -15,10 +25,6 @@ export const Colors = {
   slate100: '#F1F5F9',
   slate50: '#F8FAFC',
 
-  // Blue tints
-  blue50: '#EFF6FF',
-  blue200: '#BFDBFE',
-
   // Semantic
   accentOrange: '#F97316',
   successGreen: '#22C55E',
@@ -26,9 +32,9 @@ export const Colors = {
   errorRed: '#EF4444',
 
   // Surfaces
-  background: '#F8FAFC',
+  background: '#F5F4F0',
   card: '#FFFFFF',
-  border: '#E2E8F0',
+  border: '#ECECEC',
 
   // Status badge colors
   pendingBg: '#FEF9C3',
@@ -40,18 +46,11 @@ export const Colors = {
   cancelledBg: '#FEE2E2',
   cancelledText: '#991B1B',
 
-  // Backgrounds for surface hierarchy
-  surfaceContainer: '#E5EEFF',
-  surfaceContainerLow: '#EFF4FF',
-  surfaceContainerLowest: '#FFFFFF',
-  surfaceContainerHigh: '#DCE9FF',
-  surfaceContainerHighest: '#D3E4FE',
-
   // Text
-  textPrimary: '#0F172A',
-  textSecondary: '#1E293B',
-  textMuted: '#64748B',
-  textDisabled: '#94A3B8',
+  textPrimary: '#0D0D0D',
+  textSecondary: '#888888',
+  textMuted: '#AAAAAA',
+  textDisabled: '#CCCCCC',
   white: '#FFFFFF',
 };
 
@@ -63,6 +62,7 @@ export const Spacing = {
   xl: 20,
   xxl: 24,
   xxxl: 32,
+  xxxxl: 40,
 };
 
 export const BorderRadius = {
@@ -70,13 +70,13 @@ export const BorderRadius = {
   md: 12,
   lg: 14,
   xl: 16,
-  xxl: 24,
-  xxxl: 28,
-  full: 999,
+  xxl: 20,
+  xxxl: 24,
+  full: 9999,
 };
 
 export const FontSize = {
-  xs: 11,
+  xs: 10,
   sm: 12,
   md: 13,
   base: 14,
@@ -84,10 +84,10 @@ export const FontSize = {
   xl: 16,
   xxl: 18,
   xxxl: 20,
-  h2: 22,
-  h1: 26,
-  display: 28,
-  hero: 32,
+  h3: 22,
+  h2: 24,
+  h1: 28,
+  display: 32,
 };
 
 export const FontWeight = {
@@ -99,20 +99,70 @@ export const FontWeight = {
 };
 
 export const Shadows = {
-  card: {
+  none: {
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  sm: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  card: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
   },
   nav: {
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
     elevation: 8,
   },
 };
 
-export const BOTTOM_NAV_HEIGHT = 70;
+export const Layout = {
+  containerPadding: 18,
+  headerHeight: 60,
+  tabBarHeight: 70,
+  maxWidth: 1200,
+};
+
+export const Animation = {
+  duration: {
+    fast: 150,
+    normal: 300,
+    slow: 500,
+  },
+};
+
+// Combined theme object
+export const theme = {
+  colors: Colors,
+  spacing: Spacing,
+  borderRadius: BorderRadius,
+  fontSize: FontSize,
+  fontWeight: FontWeight,
+  shadows: Shadows,
+  layout: Layout,
+  animation: Animation,
+};
+
+export type Theme = typeof theme;
+
+export default theme;
